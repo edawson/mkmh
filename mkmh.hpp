@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <iostream>
 #include <algorithm>
+#include "murmur3.h"
 
 
 namespace mkmh{
