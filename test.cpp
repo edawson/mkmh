@@ -94,8 +94,13 @@ int main(){
     t2 = {4, 4, 5, 6, 7, 8, 9};
     testify(t_num++, "Hash intersection counts duplicate values", hash_intersection(t1, t2).size() == 4);
 
-    testify(t_num++, "Hash union yields the correct size with duplicate values", hash_union(t1, t1).size() == 2 * t1.size());
-    //testify(t_num++, "Hash union yields the correct size when duplicates are removed", 
+    testify(t_num++, "Hash union yields the correct size with duplicate values", hash_union(t1, t1).size() ==   2 * t1.size());
+    //testify(t_num++ "Union / Intersection produces expected value", hash_intersection(t1, t1).size() / hash_intersection(
+    testify(t_num++, "Hash union yields the correct size when duplicates are removed", v_set(hash_union(t1, t1)).size() == 6);
+
+    testify(t_num++, "Hash set union produces the expected number of values", hash_set_union(t1, t2).size() == 9);
+    testify(t_num++, "Hash set intersection produces the expected number of values", hash_set_intersection(t1, t2).size() == 3);
+
 
     return 0;
 }

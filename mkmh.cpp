@@ -159,24 +159,21 @@ namespace mkmh{
 
     vector<int64_t> hash_union(vector<int64_t> alpha, vector<int64_t> beta){
         vector<int64_t> ret;
-        int i = 0;
-        int j = 0;
-        while (i < alpha.size() || j < beta.size()){
-            if (alpha[i] == beta[j]){
-                ret.push_back(alpha[i]);
-                i++;
-                j++;
-            }
-            else if (alpha[i] > beta[j]){
-                ret.push_back(beta[j]);
-                j++;
-            }
-            else{
-                ret.push_back(alpha[i]);
-                i++;
-            }
-        }
 
+
+        ret.reserve(alpha.size() + beta.size());
+        ret = vector<int64_t> (alpha.begin(), alpha.end());
+        ret.insert(ret.end(), beta.begin(), beta.end());
         return ret;
     }
+
+    vector<int64_t> hash_set_intersection(vector<int64_t> alpha, vector<int64_t> beta){
+        return hash_intersection(v_set(alpha), v_set(beta));
+        
+    }
+
+    vector<int64_t> hash_set_union(vector<int64_t> alpha, vector<int64_t> beta){
+        return v_set(hash_union(alpha, beta));
+    }
+
 }
