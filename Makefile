@@ -6,6 +6,9 @@ LD_INC_FLAGS:= -I. -Imurmur3
 libmkmh.a: mkmh.o murmur3/libmurmur3.a Makefile
 	ar -rs $@ $< murmur3/libmurmur3.a
 
+example: example.cpp
+	$(CXX) $(CXXFLAGS) -o $@ $< $(LD_LIB_FLAGS) $(LD_INC_FLAGS) -lmkmh -lmurmur3
+
 test: test.cpp libmkmh.a murmur3/libmurmur3.a
 	$(CXX) $(CXXFLAGS) -o $@ $< $(LD_LIB_FLAGS) $(LD_INC_FLAGS) -lmkmh -lmurmur3
 	./test
@@ -26,3 +29,4 @@ clobber: clean
 	$(RM) *.a
 	cd murmur3 && $(MAKE) clean
 	$(RM) test
+	$(RM) example
