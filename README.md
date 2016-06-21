@@ -12,7 +12,7 @@ To use mkmh functions in your code:
 4. That's it!
 
 ## Available functions
-The functions in the package produce vectors of hashes that are:
+The functions in the package produce vectors of hashes that are:  
 1. Sorted  
 2. Guaranteed 64 bits  
 3. Bottom or Top hashes (i.e. the largest N hashes or smallest N hashes)  
