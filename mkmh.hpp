@@ -1,10 +1,11 @@
 #include <vector>
+#include <set>
 #include <string>
 #include <sstream>
 #include <cstdint>
 #include <iostream>
 #include <algorithm>
-#include "murmur3.h"
+#include "murmur3.hpp"
 
 
 namespace mkmh{
@@ -18,6 +19,8 @@ namespace mkmh{
     vector<string> kmerize(string seq, int k);
 
     vector<string> multi_kmerize(string seq, vector<int> k);
+
+    vector<string> kmer_set(vector<string> kmers);
 
     /* Returns the forward shingles size k of a sequence */
     vector<string> shingle(string seq, int k);

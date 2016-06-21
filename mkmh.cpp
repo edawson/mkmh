@@ -3,6 +3,7 @@
 namespace mkmh{
 
     using namespace std;
+    
     string reverse_complement(string seq){
         stringstream ret;
 
@@ -49,13 +50,20 @@ namespace mkmh{
         return copy;
     }
 
+    vector<string> kmer_set(vector<string> kmers){
+        set<string> uniqs = set<string> (kmers.begin(), kmers.end());
+        vector<string> ret = vector<string> (uniqs.begin(), uniqs.end());
+        return ret;
+    }
+
     /* Returns the forward and reverse-reverse complement kmers of a sequence */
     vector<string> kmerize(string seq, int k){
         int i = 0;
         vector<string> ret;
         for (i = 0; i + k < seq.length(); i++){
-            ret.push_back(seq.substr(i, i+k));
-            ret.push_back(reverse(reverse_complement(seq.substr(i, i+k))));
+            string s = seq.substr(i, k);
+            ret.push_back(s);
+            ret.push_back(reverse(reverse_complement(s)));
         }
         return ret;
     }
@@ -64,7 +72,9 @@ namespace mkmh{
         int i = 0;
         vector<string> ret;
         for (auto k : kSizes){
-            ret.extend(kmerize(seq, k));
+            vector<string> kmers = kmerize(seq, k);
+            ret.reserve(ret.size() + kmers.size());
+            ret.insert(ret.end(), kmers.begin(), kmers.end());
             //for (i = 0; i + k < seq.length(); i++){
             //    ret.push_back(seq.substr(i, i+k));
             //    ret.push_back(reverse(reverse_complement(seq.substr(i, i+k))));
@@ -78,7 +88,7 @@ namespace mkmh{
         int i = 0;
         vector<string> ret;
         for (i = 0; i < seq.length() - k; i++){
-            ret.push_back(seq.substr(i, i+k));
+            ret.push_back(seq.substr(i, k));
         }
         return ret;
     }
@@ -88,7 +98,7 @@ namespace mkmh{
         vector<string> ret;
         for (auto k : kSizes){
             for (i = 0; i + k < seq.length(); i++){
-                ret.push_back(seq.substr(i, i+k));
+                ret.push_back(seq.substr(i, k));
             }
         }
         return ret;
@@ -98,8 +108,24 @@ namespace mkmh{
 
     vector<int64_t> minhash_64(string seq, int k, int hashSize, bool useBottom){
         vector<int64_t> ret;
+        vector<string> kmers = kmerize(seq, k);
+        ret.reserve(kmers.size());
+        uint32_t seed = 101;
 
-        return ret;
+        vector<string>::iterator it;
+        for (it = kmers.begin(); it != kmers.end(); it++){
+            uint32_t khash[4];
+            MurmurHash3_x64_128(&(*it), (*it).length(), seed, khash);
+            //MurmurHash3_x64_128(argv[1], strlen(argv[1]), seed, hash);
+            int64_t r_hash = int64_t(khash[2]) << 32 | int64_t(khash[1]);
+            ret.push_back(r_hash);
+        }
+
+        std::sort(ret.begin(), ret.end());
+
+        return useBottom ?
+            vector<int64_t> (ret.begin(), ret.begin() + hashSize) :
+            vector<int64_t> (ret.end() - hashSize ,ret.end());
     }
 
     vector<int64_t> top_minhash_64(string seq, int k, int hashSize){
@@ -110,14 +136,46 @@ namespace mkmh{
         return minhash_64(seq, k, hashSize, true);
     }
 
-    vector<int64_t> hash_union(vector<int64_t> alpha, vector<int64_t> beta){
+    vector<int64_t> hash_intersection(vector<int64_t> alpha, vector<int64_t> beta){
         vector<int64_t> ret;
+        int i = 0;
+        int j = 0;
+        while (i < alpha.size() && j < beta.size()){
+            if (alpha[i] == beta[j]){
+                ret.push_back(alpha[i]);
+                i++;
+                j++;
+            }
+            else if (alpha[i] > beta[j]){
+                j++;
+            }
+            else{
+                i++;
+            }
+        }
 
         return ret;
     }
 
-    vector<int64_t> hash_intersection(vector<int64_t> alpha, vector<int64_t> beta){
+    vector<int64_t> hash_union(vector<int64_t> alpha, vector<int64_t> beta){
         vector<int64_t> ret;
+        int i = 0;
+        int j = 0;
+        while (i < alpha.size() || j < beta.size()){
+            if (alpha[i] == beta[j]){
+                ret.push_back(alpha[i]);
+                i++;
+                j++;
+            }
+            else if (alpha[i] > beta[j]){
+                ret.push_back(beta[j]);
+                j++;
+            }
+            else{
+                ret.push_back(alpha[i]);
+                i++;
+            }
+        }
 
         return ret;
     }
