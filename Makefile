@@ -3,8 +3,8 @@ CXXFLAGS:= -O3 -mtune=native -std=c++11
 LD_LIB_FLAGS:= -Lmurmur3 -L.
 LD_INC_FLAGS:= -I. -Imurmur3
 
-libmkmh.a: mkmh.o Makefile
-	ar -rs $@ $<
+libmkmh.a: mkmh.o murmur3/libmurmur3.a Makefile
+	ar -rs $@ $< murmur3/libmurmur3.a
 
 test: test.cpp libmkmh.a murmur3/libmurmur3.a
 	$(CXX) $(CXXFLAGS) -o $@ $< $(LD_LIB_FLAGS) $(LD_INC_FLAGS) -lmkmh -lmurmur3
