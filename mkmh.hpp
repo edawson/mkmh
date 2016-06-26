@@ -1,3 +1,6 @@
+#ifndef MKMH_D
+#define MKMH_D
+
 #include <vector>
 #include <set>
 #include <string>
@@ -64,3 +67,5 @@ namespace mkmh{
     /* Returns the intersection of both sets. Duplicates are included only once */
     vector<int64_t> hash_set_intersection(vector<int64_t> alpha, vector<int64_t> beta);
 }
+
+#endif
