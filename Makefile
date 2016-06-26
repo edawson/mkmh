@@ -1,5 +1,5 @@
 CXX:=g++
-CXXFLAGS:= -O3 -mtune=native -std=c++11
+CXXFLAGS:= -O3 -mtune=native -std=c++11 #-fopenmp
 LD_LIB_FLAGS:= -Lmurmur3 -L.
 LD_INC_FLAGS:= -I. -Imurmur3
 

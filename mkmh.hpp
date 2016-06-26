@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <iostream>
 #include <algorithm>
+#include <omp.h>
 #include "murmur3.hpp"
 
 
