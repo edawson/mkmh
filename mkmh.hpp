@@ -62,6 +62,8 @@ namespace mkmh{
     /* Returns the intersection of alpha and beta, including duplicates the number of times they appear in both vectors */
     vector<int64_t> hash_intersection(vector<int64_t> alpha, vector<int64_t> beta);
 
+    vector<string> kmer_intersection(vector<string> alpha, vector<string> beta);
+
     /* Returns the union of the two sets after deduplicating all duplicates */
     vector<int64_t> hash_set_union(vector<int64_t> alpha, vector<int64_t> beta);
 

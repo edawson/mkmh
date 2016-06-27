@@ -14,7 +14,7 @@ namespace mkmh{
                     ret << "T";
                     break;
                 case 'a':
-                    ret << "c";
+                    ret << "t";
                     break;
                 case 'T':
                     ret << "A";
@@ -134,15 +134,27 @@ namespace mkmh{
 
         vector<string>::iterator it;
         string* kk = kmers.data();
+        string* forward;
+        string* rev_rev_forward;
         //for (it = kmers.begin(); it != kmers.end(); it++){
-        #pragma omp parallel for
+        //#pragma omp parallel for
         for (int i = 0; i < kmers.size(); i++){
             uint32_t khash[4];
+            uint32_t rev_rev_khash[4];
+            forward = &(kk[i]);
+            string rrf = reverse(reverse_complement(kk[i]));
+            rev_rev_forward = &rrf;
+            //cerr << forward << " " << rev_forward << endl;
+
             //MurmurHash3_x64_128(&(*it), (*it).length(), seed, khash);
-            MurmurHash3_x64_128(&(kk[i]), (kk[i]).length(), seed, khash);
-            //MurmurHash3_x64_128(argv[1], strlen(argv[1]), seed, hash);
-            int64_t r_hash = int64_t(khash[2]) << 32 | int64_t(khash[1]);
-            ret.push_back(r_hash);
+            MurmurHash3_x64_128(&forward, (*forward).length(), seed, khash);
+            MurmurHash3_x64_128(&rev_rev_forward, (*rev_rev_forward).length(), seed, rev_rev_khash);
+            //cerr << *khash << " " << *rev_rev_khash << endl;
+            int64_t tmp_for = int64_t(khash[2]) << 32 | int64_t(khash[1]);
+            int64_t tmp_rev = int64_t(rev_rev_khash[2]) << 32 | int64_t(rev_rev_khash[1]);
+            //cerr << r_hash << endl;
+            //int64_t r_hash = int64_t(khash[2]) << 32 | int64_t(khash[1]);
+            ret[i] = tmp_for < tmp_rev ? tmp_for : tmp_rev; //ret.push_back(r_hash);
         }
 
         std::sort(ret.begin(), ret.end());
@@ -161,12 +173,11 @@ namespace mkmh{
 
         vector<string>::iterator it;
         string* kk = kmers.data();
-        //for (it = kmers.begin(); it != kmers.end(); it++){
-        for (int i = 0; i < kmers.size(); i++){
+        for (it = kmers.begin(); it != kmers.end(); it++){
+        //for (int i = 0; i < kmers.size(); i++){
             uint32_t khash[4];
-            //MurmurHash3_x64_128(&(*it), (*it).length(), seed, khash);
-            MurmurHash3_x64_128(&(kk[i]), (kk[i]).length(), seed, khash);
-            //MurmurHash3_x64_128(argv[1], strlen(argv[1]), seed, hash);
+            MurmurHash3_x64_128(&(*it), (*it).length(), seed, khash);
+            //MurmurHash3_x64_128(&(kk[i]), (kk[i]).length(), seed, khash);
             int64_t r_hash = int64_t(khash[2]) << 32 | int64_t(khash[1]);
             ret.push_back(r_hash);
         }
@@ -208,6 +219,26 @@ namespace mkmh{
             }
         }
 
+        return ret;
+    }
+
+    vector<string> kmer_intersection(vector<string> alpha, vector<string> beta){
+        vector<string> ret;
+        ret.reserve(alpha.size());
+        int i = 0;
+        int j = 0;
+        while(i < alpha.size() && j < beta.size()){
+            if (alpha[i] == beta[j]){
+                ret.push_back(alpha[i]);
+            }
+            else if (alpha[i] > beta[j]){
+                j++;
+            }
+            else{
+                i++;
+            }
+        }
+        
         return ret;
     }
 
