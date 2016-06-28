@@ -1,5 +1,5 @@
 CXX:=g++
-CXXFLAGS:= -O2 -std=c++11 #-fopenmp
+CXXFLAGS:= -O3 -std=c++11 -fopenmp
 LD_LIB_FLAGS:= -Lmurmur3 -L.
 LD_INC_FLAGS:= -I. -Imurmur3
 

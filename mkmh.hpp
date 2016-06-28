@@ -5,6 +5,7 @@
 #include <set>
 #include <string>
 #include <sstream>
+#include <locale>
 #include <cstdint>
 #include <iostream>
 #include <algorithm>
@@ -20,6 +21,9 @@ namespace mkmh{
     
     /* Reverse complement the string seq (assumes seq is DNA, and returns non-ACTG letters as-is*/
     string reverse_complement(string seq);
+
+    /* Capitalize all characters in a string */
+    string to_upper(string seq);
 
     /* Returns the forward and reverse-reverse complement kmers of a sequence */
     vector<string> kmerize(string seq, int k);

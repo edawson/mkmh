@@ -75,14 +75,18 @@ int main(){
 
     /* Test top_minhash_64 and bottom_minhash_64 */
     x = true;
-    vector<int64_t> tops = top_minhash_64(seq, 5, 5);
-    vector<int64_t> bottoms = bottom_minhash_64(seq, 5, 5);
+    vector<int64_t> tops = top_minhash_64(seq, 4, 4);
+    vector<int64_t> bottoms = bottom_minhash_64(seq, 4, 4);
     for (auto e : tops){
         for (auto f : bottoms){
             if (e < f){
                 x = false;
             }
         }
+    }
+    for (int i = 0; i < bottoms.size(); i++){
+        //cerr << kmerize(seq, 4)[i] << endl;
+        //cerr << bottoms[i] << " " << tops[i] << endl;
     }
     testify(t_num++, "top_minhash64 produces the bigger values than bottom_minhash_64", x);
 
