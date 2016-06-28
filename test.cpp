@@ -63,6 +63,9 @@ int main(){
     vector<int> ret_test = {5};
     ret = minhash_64(seq, ret_test, 5);
     testify(t_num++, "multi_kmer minhash_64 produces the right number of hashes", ret.size() == 5);
+    for (int iii = 1; iii < 1000; iii++){
+        continue;
+    }
     o_ret = minhash_64(seq, ret_test, 5);
     testify(t_num++, "multi_kmer minhash_64 produces the same top and bottom values in the hash", (ret[0] == o_ret[0] & ret[4] == o_ret[4]));
 

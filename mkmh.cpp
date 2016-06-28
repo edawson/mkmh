@@ -1,4 +1,5 @@
 #include "mkmh.hpp"
+#include <string.h>
 
 namespace mkmh{
 
@@ -134,21 +135,21 @@ namespace mkmh{
 
         vector<string>::iterator it;
         string* kk = kmers.data();
-        string* forward;
-        string* rev_rev_forward;
+        const char* forward;
+        const char* rev_rev_forward;
         //for (it = kmers.begin(); it != kmers.end(); it++){
         //#pragma omp parallel for
         for (int i = 0; i < kmers.size(); i++){
             uint32_t khash[4];
             uint32_t rev_rev_khash[4];
-            forward = &(kk[i]);
-            string rrf = reverse(reverse_complement(kk[i]));
-            rev_rev_forward = &rrf;
+            forward = kmers[i].c_str();
+            string rrf = reverse(reverse_complement(kmers[i]));
+            rev_rev_forward = rrf.c_str();
             //cerr << forward << " " << rev_forward << endl;
 
             //MurmurHash3_x64_128(&(*it), (*it).length(), seed, khash);
-            MurmurHash3_x64_128(&forward, (*forward).length(), seed, khash);
-            MurmurHash3_x64_128(&rev_rev_forward, (*rev_rev_forward).length(), seed, rev_rev_khash);
+            MurmurHash3_x64_128(forward, strlen(forward), seed, khash);
+            MurmurHash3_x64_128(rev_rev_forward, strlen(rev_rev_forward), seed, rev_rev_khash);
             //cerr << *khash << " " << *rev_rev_khash << endl;
             int64_t tmp_for = int64_t(khash[2]) << 32 | int64_t(khash[1]);
             int64_t tmp_rev = int64_t(rev_rev_khash[2]) << 32 | int64_t(rev_rev_khash[1]);
