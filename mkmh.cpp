@@ -265,11 +265,8 @@ namespace mkmh{
         ret.reserve(alpha.size());
         int i = 0;
         int j = 0;
-        //while (i < alpha.size() && j < beta.size()){
-        //#pragma omp parallel for private(i, j)
-        for (i = 0, j = 0; i < alpha.size(), j < beta.size();){
+        while (i < alpha.size() && j < beta.size()){
             if (alpha[i] == beta[j]){
-                //#pragma omp critical
                 ret.push_back(alpha[i]);
                 i++;
                 j++;
@@ -293,6 +290,8 @@ namespace mkmh{
         while(i < alpha.size() && j < beta.size()){
             if (alpha[i] == beta[j]){
                 ret.push_back(alpha[i]);
+                i++;
+                j++;
             }
             else if (alpha[i] > beta[j]){
                 j++;
