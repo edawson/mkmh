@@ -133,7 +133,7 @@ namespace mkmh{
     vector<string> multi_kmerize(string seq, vector<int> kSizes){
         int i = 0;
         vector<string> ret;
-        ret.reserve(kSizes.size() * 1000);
+        //ret.reserve(kSizes.size() * 1000);
         for (auto k : kSizes){
             vector<string> kmers = kmerize(seq, k);
             ret.reserve(ret.size() + kmers.size());
@@ -180,7 +180,7 @@ namespace mkmh{
         vector<int64_t> ret(kmers.size(), 0);
         //const char* forward;
         //const char* rev_rev_forward;
-        #pragma omp parallel for
+        //#pragma omp parallel for
         for (int i = 0; i < kmers.size(); i++){
             uint32_t khash[4];
             uint32_t rev_rev_khash[4];
@@ -203,9 +203,11 @@ namespace mkmh{
 
         std::sort(ret.begin(), ret.end());
 
+        int hashmax = hashSize < ret.size() ? hashSize : ret.size() - 1 ;
+
         return useBottom ?
-            vector<int64_t> (ret.begin(), ret.begin() + hashSize) :
-            vector<int64_t> (ret.rbegin(),ret.rbegin() + hashSize);
+            vector<int64_t> (ret.begin(), ret.begin() + hashmax) :
+            vector<int64_t> (ret.rbegin(),ret.rbegin() + hashmax);
 
     }
 
