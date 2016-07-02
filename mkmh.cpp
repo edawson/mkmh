@@ -290,7 +290,7 @@ vector<int64_t> minhash_64_depth_filter(string& seq, vector<int>& k,
         //ret[i] = r_hash;
         int64_t r_hash = tmp_for < tmp_rev ? tmp_for : tmp_rev; //ret.push_back(r_hash);
         if (hash_to_depth[r_hash] > minDepth){
-#pragma omp critical
+            #pragma omp critical
             ret.push_back(r_hash);
         }
     }
@@ -311,11 +311,6 @@ vector<int64_t> minhash_64(string seq, int k, int hashSize, bool useBottom){
     vector<string> kmers = kmerize(seq, k);
     vector<int64_t> ret(kmers.size(), 0);
 
-    //ret.reserve(kmers.size());
-    //vector<string>::iterator it;
-    //const char* forward;
-    //const char* rev_rev_forward;
-    //for (it = kmers.begin(); it != kmers.end(); it++){
     for (int i = 0; i < kmers.size(); i++){
 
         uint32_t seed = 101;
