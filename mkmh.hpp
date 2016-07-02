@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <set>
+#include <unordered_map>
 #include <string>
 #include <sstream>
 #include <locale>
@@ -48,12 +49,24 @@ namespace mkmh{
     /* Returns the forward shingles of all k sizes of a sequence */
     vector<string> multi_shingle(string seq, vector<int> k);
 
+    /* Return all hashes, unsorted, as fast as possible */
+    vector<int64_t> allhash_unsorted_64(string& seq, vector<int>& k);
+
     /* Returns the lowest hashSize hashes of the kmers (length k...k` in k) of seq */
-    vector<int64_t> minhash_64(string seq, vector<int> k, int hashSize, bool useBottom=true);
+    vector<int64_t> minhash_64(string& seq, vector<int>& k, int hashSize, bool useBottom=true);
 
     /* Returns the bottom/top hashSize hashes of kmers size k in seq */ 
     vector<int64_t> minhash_64(string seq, int k, int hashSize, bool useBottom=true);
 
+    /* Returns the bottom/top hashSize hashes of kmers size k which 
+     * occur more than minDepth times, based on the depth in hash_to_depth */
+    vector<int64_t> minhash_64_depth_filter(string& seq, vector<int>& k,
+                            int hashSize, bool useBottom, int minDepth,
+                            unordered_map<int64_t, int>& hash_to_depth);
+    /* Takes in a list of pre-computed hashes and returns the MinHash (size hashSize)
+     * of the hashes that pass the depth filter */
+    vector<int64_t> minhash_64_depth_filter(vector<int64_t>& hashes, int hashSize, bool useBottom,
+                                    int min_depth, unordered_map<int64_t, int>& hash_to_depth);
     /* helper function: returns the top hashSize hashes of the kmers size k in seq */
     vector<int64_t> top_minhash_64(string seq, int k, int hashSize);
 
