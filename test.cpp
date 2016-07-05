@@ -1,6 +1,7 @@
 #include "mkmh.hpp"
 #include <string>
 #include <iostream>
+#include <queue>
 
 using namespace std;
 using namespace mkmh;
@@ -116,6 +117,18 @@ int main(){
 
     testify(t_num++, "Hash set union produces the expected number of values", hash_set_union(t1, t2).size() == 9);
     testify(t_num++, "Hash set intersection produces the expected number of values", hash_set_intersection(t1, t2).size() == 3);
+
+    string a = "AAATGCTTTTGCA";
+    vector<int> three;
+    three.push_back(3);
+    priority_queue<string> a_heap = kmer_heap(a, three);
+    //    cerr << a_heap.top() << endl;
+    testify(t_num++, "Kmer heap produces expected lowest kmer", (a_heap.top() == "GCA"));
+    while (a_heap.size() > 1){
+        //cerr << a_heap.top() << endl;
+        a_heap.pop();
+    }
+    testify(t_num++, "Kmer heap produces expected highest kmer", (a_heap.top() == "AAA"));
 
 
     return 0;

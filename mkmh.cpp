@@ -101,6 +101,66 @@ namespace mkmh{
         return ret;
     }
 
+    int64_t kmer_to_integer(string kmer){
+        //00 - 'G', 01 - 'A', 10 - 'T', and 11 - 'C'
+        int8_t ret[8];
+        int64_t conv;
+        int count = 0;
+        for (int i = 0; i < kmer.length(); i++){
+            char c = kmer[i];
+            switch(c){
+                //01
+                case 'A':
+                case 'a':
+                    //                conv ^= (-x ^ conv) & (1 << n);
+                    //                num << 1;
+                    break;
+                case 'T':
+                case 't':
+                    //                num << 2;
+                    break;
+                case 'C':
+                case 'c':
+                    //                num << 3;
+                    break;
+                case 'G':
+                case 'g':
+                    //                num << 4;
+                    break;
+                default:
+                    //                num << 5;
+                    break;
+
+            }
+        }
+
+
+        return conv;
+    }
+
+    priority_queue<string> kmer_heap(string seq, vector<int> kmer){
+        
+        vector<string> base;
+        
+        //priority_queue<string> ret(base.begin(), base.end());
+        for (auto k : kmer){
+            vector<string> outmers(seq.length() - k, "");
+            //#pragma omp parallel for
+            for (int i = 0; i < seq.length() - k; i++){
+                string forward = seq.substr(i, k);
+                string revrev = reverse(reverse_complement(forward));
+
+                //ret.push( (revrev < forward ? revrev : forward) );
+                outmers[i] = (revrev < forward ? revrev : forward);
+            }
+            base.reserve(outmers.size() + base.size());
+            base.insert(base.end(), outmers.begin(), outmers.end());
+        }
+
+        priority_queue<string> ret(base.begin(), base.end());
+        return ret;
+    }
+
     /* Returns the forward and reverse-reverse complement kmers of a sequence */
     vector<string> kmerize(string seq, int k){
         vector<string> ret(seq.length() - k, "");
@@ -115,305 +175,311 @@ namespace mkmh{
         }
         return ret;
     }
-    /*
-       vector<string> kmerize(string seq, int k){
-       int i = 0;
-       int len_kmers = 2 * seq.length() - k;
-       vector<string> ret(0, len_kmers);
-#pragma omp parallel for
-for (i = 0; i + k < seq.length(); i++){
-string s = seq.substr(i, k);
-ret[i] = s;
-ret[i + len_kmers] = reverse(reverse_complement(s));
-}
-return ret;
-}
-*/
+    vector<string> multi_kmerize(string seq, vector<int> kSizes){
+        int i = 0;
+        vector<string> ret;
+        //ret.reserve(kSizes.size() * 1000);
+        for (auto k : kSizes){
+            vector<string> kmers = kmerize(seq, k);
+            ret.reserve(ret.size() + kmers.size());
+            ret.insert(ret.end(), kmers.begin(), kmers.end());
 
-vector<string> multi_kmerize(string seq, vector<int> kSizes){
-    int i = 0;
-    vector<string> ret;
-    //ret.reserve(kSizes.size() * 1000);
-    for (auto k : kSizes){
-        vector<string> kmers = kmerize(seq, k);
-        ret.reserve(ret.size() + kmers.size());
-        ret.insert(ret.end(), kmers.begin(), kmers.end());
-
-        //for (i = 0; i + k < seq.length(); i++){
-        //    ret.push_back(seq.substr(i, i+k));
-        //    ret.push_back(reverse(reverse_complement(seq.substr(i, i+k))));
-        //}
+            //for (i = 0; i + k < seq.length(); i++){
+            //    ret.push_back(seq.substr(i, i+k));
+            //    ret.push_back(reverse(reverse_complement(seq.substr(i, i+k))));
+            //}
 
 
+        }
+        return ret;
     }
-    return ret;
-}
 
-/* Returns the forward shingles size k of a sequence */
-vector<string> shingle(string seq, int k){
-    int i = 0;
-    vector<string> ret;
-    for (i = 0; i < seq.length() - k; i++){
-        ret.push_back(seq.substr(i, k));
-    }
-    return ret;
-}
-
-vector<string> multi_shingle(string seq, vector<int> kSizes){
-    int i = 0;
-    vector<string> ret;
-    for (auto k : kSizes){
-        for (i = 0; i + k < seq.length(); i++){
+    /* Returns the forward shingles size k of a sequence */
+    vector<string> shingle(string seq, int k){
+        int i = 0;
+        vector<string> ret;
+        for (i = 0; i < seq.length() - k; i++){
             ret.push_back(seq.substr(i, k));
         }
-    }
-    return ret;
-}
-
-// vector<int64_t> preserve_kmer_mh64(string seq, vector<int> kSizes, int hashSize);
-vector<int64_t> allhash_unsorted_64(string& seq, vector<int>& k){
-    vector<string> kmers = multi_kmerize(seq, k);
-    //ret.reserve(kmers.size());
-
-    vector<int64_t> ret(kmers.size(), 0);
-    //#pragma omp parallel for
-    for (int i = 0; i < kmers.size(); i++){
-        uint32_t khash[4];
-        uint32_t rev_rev_khash[4];
-        //uint32_t seed = 101;
-        const char* forward = kmers[i].c_str();
-
-        string rrf = reverse(reverse_complement(kmers[i]));
-        const char* rev_rev_forward = rrf.c_str();
-
-        MurmurHash3_x64_128(forward, strlen(forward), 101, khash);
-        MurmurHash3_x64_128(rev_rev_forward, strlen(rev_rev_forward), 101, rev_rev_khash);
-
-        int64_t tmp_for = int64_t(khash[2]) << 32 | int64_t(khash[1]);
-        int64_t tmp_rev = int64_t(rev_rev_khash[2]) << 32 | int64_t(rev_rev_khash[1]);
-
-        ret[i] = tmp_for < tmp_rev ? tmp_for : tmp_rev; //ret.push_back(r_hash);
-    }
-
-    return ret;
-}
-
-vector<int64_t> minhash_64(string& seq, vector<int>& k, int hashSize, bool useBottom){
-    vector<string> kmers = multi_kmerize(seq, k);
-    //ret.reserve(kmers.size());
-
-    vector<int64_t> ret(kmers.size(), 0);
-    //const char* forward;
-    //const char* rev_rev_forward;
-    //#pragma omp parallel for
-    for (int i = 0; i < kmers.size(); i++){
-        uint32_t khash[4];
-        uint32_t rev_rev_khash[4];
-        //uint32_t seed = 101;
-        const char* forward = kmers[i].c_str();
-
-        string rrf = reverse(reverse_complement(kmers[i]));
-        const char* rev_rev_forward = rrf.c_str();
-
-        MurmurHash3_x64_128(forward, strlen(forward), 101, khash);
-        MurmurHash3_x64_128(rev_rev_forward, strlen(rev_rev_forward), 101, rev_rev_khash);
-
-        int64_t tmp_for = int64_t(khash[2]) << 32 | int64_t(khash[1]);
-        int64_t tmp_rev = int64_t(rev_rev_khash[2]) << 32 | int64_t(rev_rev_khash[1]);
-
-        //int64_t r_hash = khash[2] < rev_rev_khash[2] ? int64_t(khash[2]) << 32 | int64_t(khash[1]) : int64_t(rev_rev_khash[2]) << 32 | int64_t(rev_rev_khash[1]);
-        //ret[i] = r_hash;
-        ret[i] = tmp_for < tmp_rev ? tmp_for : tmp_rev; //ret.push_back(r_hash);
-    }
-
-    std::sort(ret.begin(), ret.end());
-
-    int hashmax = hashSize < ret.size() ? hashSize : ret.size() - 1 ;
-
-    return useBottom ?
-        vector<int64_t> (ret.begin(), ret.begin() + hashmax) :
-        vector<int64_t> (ret.rbegin(),ret.rbegin() + hashmax);
-
-}
-
-vector<int64_t> minhash_64_depth_filter(vector<int64_t>& hashes, int hashSize, bool useBottom,
-        int min_depth, unordered_map<int64_t, int>& hash_to_depth){
-    vector<int64_t> ret;
-    ret.reserve(hashes.size() / 2);
-    for (int i = 0; i < hashes.size(); i++){
-        if (hash_to_depth[hashes[i]] > min_depth){
-            #pragma omp critical
-            ret.push_back(hashes[i]);
-        }
-    }
-
-    /**
-     * Special case if no hashes pass the depth filter.
-     */
-    if (ret.size() == 0){
         return ret;
     }
 
-    std::sort(ret.begin(), ret.end());
-
-    int hashmax = hashSize < ret.size() ? hashSize : ret.size() - 1 ;
-    return useBottom ?
-        vector<int64_t> (ret.begin(), ret.begin() + hashmax) :
-        vector<int64_t> (ret.rbegin(),ret.rbegin() + hashmax);
-}
-
-vector<int64_t> minhash_64_depth_filter(string& seq, vector<int>& k,
-        int hashSize, bool useBottom, int minDepth,
-        unordered_map<int64_t, int>& hash_to_depth){
-
-    vector<string> kmers = multi_kmerize(seq, k);
-
-    vector<int64_t> ret;
-    ret.reserve(kmers.size());
-    //#pragma omp parallel for
-    for (int i = 0; i < kmers.size(); i++){
-        uint32_t khash[4];
-        uint32_t rev_rev_khash[4];
-        //uint32_t seed = 101;
-        const char* forward = kmers[i].c_str();
-
-        string rrf = reverse(reverse_complement(kmers[i]));
-        const char* rev_rev_forward = rrf.c_str();
-
-        MurmurHash3_x64_128(forward, strlen(forward), 101, khash);
-        MurmurHash3_x64_128(rev_rev_forward, strlen(rev_rev_forward), 101, rev_rev_khash);
-
-        int64_t tmp_for = int64_t(khash[2]) << 32 | int64_t(khash[1]);
-        int64_t tmp_rev = int64_t(rev_rev_khash[2]) << 32 | int64_t(rev_rev_khash[1]);
-
-        //int64_t r_hash = khash[2] < rev_rev_khash[2] ? int64_t(khash[2]) << 32 | int64_t(khash[1]) : int64_t(rev_rev_khash[2]) << 32 | int64_t(rev_rev_khash[1]);
-        //ret[i] = r_hash;
-        int64_t r_hash = tmp_for < tmp_rev ? tmp_for : tmp_rev; //ret.push_back(r_hash);
-        if (hash_to_depth[r_hash] > minDepth){
-            #pragma omp critical
-            ret.push_back(r_hash);
+    vector<string> multi_shingle(string seq, vector<int> kSizes){
+        int i = 0;
+        vector<string> ret;
+        for (auto k : kSizes){
+            for (i = 0; i + k < seq.length(); i++){
+                ret.push_back(seq.substr(i, k));
+            }
         }
-    }
-
-    if (ret.size() == 0){
         return ret;
     }
-    std::sort(ret.begin(), ret.end());
 
-    int hashmax = hashSize < ret.size() ? hashSize : ret.size() - 1 ;
+    // vector<int64_t> preserve_kmer_mh64(string seq, vector<int> kSizes, int hashSize);
+    vector<int64_t> allhash_unsorted_64(string& seq, vector<int>& k){
+        vector<string> kmers = multi_kmerize(seq, k);
+        //ret.reserve(kmers.size());
 
-    return useBottom ?
-        vector<int64_t> (ret.begin(), ret.begin() + hashmax) :
-        vector<int64_t> (ret.rbegin(),ret.rbegin() + hashmax);
-}
+        vector<int64_t> ret(kmers.size(), 0);
+        //#pragma omp parallel for
+        for (int i = 0; i < kmers.size(); i++){
+            uint32_t khash[4];
+            uint32_t rev_rev_khash[4];
+            //uint32_t seed = 101;
+            const char* forward = kmers[i].c_str();
 
-vector<int64_t> minhash_64(string seq, int k, int hashSize, bool useBottom){
-    vector<string> kmers = kmerize(seq, k);
-    vector<int64_t> ret(kmers.size(), 0);
+            string rrf = reverse(reverse_complement(kmers[i]));
+            const char* rev_rev_forward = rrf.c_str();
 
-    for (int i = 0; i < kmers.size(); i++){
+            MurmurHash3_x64_128(forward, strlen(forward), 101, khash);
+            MurmurHash3_x64_128(rev_rev_forward, strlen(rev_rev_forward), 101, rev_rev_khash);
 
-        uint32_t seed = 101;
-        uint32_t khash[4];
-        uint32_t rev_rev_khash[4];
-        const char*
-            forward = kmers[i].c_str();
-        string rrf = reverse(reverse_complement(kmers[i]));
-        const char*
-            rev_rev_forward = rrf.c_str();
+            int64_t tmp_for = int64_t(khash[2]) << 32 | int64_t(khash[1]);
+            int64_t tmp_rev = int64_t(rev_rev_khash[2]) << 32 | int64_t(rev_rev_khash[1]);
 
-        MurmurHash3_x64_128(forward, strlen(forward), seed, khash);
-        MurmurHash3_x64_128(rev_rev_forward, strlen(rev_rev_forward), seed, rev_rev_khash);
-
-        int64_t tmp_for = int64_t(khash[2]) << 32 | int64_t(khash[1]);
-        int64_t tmp_rev = int64_t(rev_rev_khash[2]) << 32 | int64_t(rev_rev_khash[1]);
-        ;
-
-        ret[i] = tmp_for < tmp_rev ? tmp_for : tmp_rev;
-        //cerr << "kmer: " << kmers[i] << tmp_for << " " << tmp_rev << endl;
-        //ret.push_back(tmp_for < tmp_rev ? tmp_for : tmp_rev);
-    }
-
-    std::sort(ret.begin(), ret.end());
-
-
-    if (useBottom){
-        return vector<int64_t> (ret.begin(), ret.begin() + hashSize);
-    }
-    else{
-        return vector<int64_t> (ret.rbegin(), ret.rbegin() + hashSize);
-    }
-}
-
-vector<int64_t> top_minhash_64(string seq, int k, int hashSize){
-    return minhash_64(seq, k, hashSize, false);
-}
-
-vector<int64_t> bottom_minhash_64(string seq, int k, int hashSize){
-    return minhash_64(seq, k, hashSize, true);
-}
-
-vector<int64_t> hash_intersection(vector<int64_t> alpha, vector<int64_t> beta){
-    vector<int64_t> ret;
-    ret.reserve(alpha.size());
-    int i = 0;
-    int j = 0;
-    while (i < alpha.size() && j < beta.size()){
-        if (alpha[i] == beta[j]){
-            ret.push_back(alpha[i]);
-            i++;
-            j++;
+            ret[i] = tmp_for < tmp_rev ? tmp_for : tmp_rev; //ret.push_back(r_hash);
         }
-        else if (alpha[i] > beta[j]){
-            j++;
+
+        return ret;
+    }
+
+    vector<int64_t> minhash_64(string& seq, vector<int>& k, int hashSize, bool useBottom){
+        vector<string> kmers = multi_kmerize(seq, k);
+        //ret.reserve(kmers.size());
+
+        vector<int64_t> ret(kmers.size(), 0);
+        //const char* forward;
+        //const char* rev_rev_forward;
+        //#pragma omp parallel for
+        for (int i = 0; i < kmers.size(); i++){
+            uint32_t khash[4];
+            uint32_t rev_rev_khash[4];
+            //uint32_t seed = 101;
+            const char* forward = kmers[i].c_str();
+
+            string rrf = reverse(reverse_complement(kmers[i]));
+            const char* rev_rev_forward = rrf.c_str();
+
+            MurmurHash3_x64_128(forward, strlen(forward), 101, khash);
+            MurmurHash3_x64_128(rev_rev_forward, strlen(rev_rev_forward), 101, rev_rev_khash);
+
+            int64_t tmp_for = int64_t(khash[2]) << 32 | int64_t(khash[1]);
+            int64_t tmp_rev = int64_t(rev_rev_khash[2]) << 32 | int64_t(rev_rev_khash[1]);
+
+            //int64_t r_hash = khash[2] < rev_rev_khash[2] ? int64_t(khash[2]) << 32 | int64_t(khash[1]) : int64_t(rev_rev_khash[2]) << 32 | int64_t(rev_rev_khash[1]);
+            //ret[i] = r_hash;
+            ret[i] = tmp_for < tmp_rev ? tmp_for : tmp_rev; //ret.push_back(r_hash);
+        }
+
+        std::sort(ret.begin(), ret.end());
+
+        int hashmax = hashSize < ret.size() ? hashSize : ret.size() - 1 ;
+
+        return useBottom ?
+            vector<int64_t> (ret.begin(), ret.begin() + hashmax) :
+            vector<int64_t> (ret.rbegin(),ret.rbegin() + hashmax);
+
+    }
+
+    vector<int64_t> minhash_64_depth_filter(vector<int64_t>& hashes, int hashSize, bool useBottom,
+            int min_depth, unordered_map<int64_t, int>& hash_to_depth){
+        vector<int64_t> ret;
+        ret.reserve(hashes.size() / 2);
+        for (int i = 0; i < hashes.size(); i++){
+            if (hash_to_depth[hashes[i]] > min_depth){
+#pragma omp critical
+                ret.push_back(hashes[i]);
+            }
+        }
+
+        /**
+         * Special case if no hashes pass the depth filter.
+         */
+        if (ret.size() == 0){
+            return ret;
+        }
+
+        std::sort(ret.begin(), ret.end());
+
+        int hashmax = hashSize < ret.size() ? hashSize : ret.size() - 1 ;
+        return useBottom ?
+            vector<int64_t> (ret.begin(), ret.begin() + hashmax) :
+            vector<int64_t> (ret.rbegin(),ret.rbegin() + hashmax);
+    }
+
+    vector<int64_t> minhash_64_depth_filter(string& seq, vector<int>& k,
+            int hashSize, bool useBottom, int minDepth,
+            unordered_map<int64_t, int>& hash_to_depth){
+
+        vector<string> kmers = multi_kmerize(seq, k);
+
+        vector<int64_t> ret;
+        ret.reserve(kmers.size());
+        //#pragma omp parallel for
+        for (int i = 0; i < kmers.size(); i++){
+            uint32_t khash[4];
+            uint32_t rev_rev_khash[4];
+            //uint32_t seed = 101;
+            const char* forward = kmers[i].c_str();
+
+            string rrf = reverse(reverse_complement(kmers[i]));
+            const char* rev_rev_forward = rrf.c_str();
+
+            MurmurHash3_x64_128(forward, strlen(forward), 101, khash);
+            MurmurHash3_x64_128(rev_rev_forward, strlen(rev_rev_forward), 101, rev_rev_khash);
+
+            int64_t tmp_for = int64_t(khash[2]) << 32 | int64_t(khash[1]);
+            int64_t tmp_rev = int64_t(rev_rev_khash[2]) << 32 | int64_t(rev_rev_khash[1]);
+
+            //int64_t r_hash = khash[2] < rev_rev_khash[2] ? int64_t(khash[2]) << 32 | int64_t(khash[1]) : int64_t(rev_rev_khash[2]) << 32 | int64_t(rev_rev_khash[1]);
+            //ret[i] = r_hash;
+            int64_t r_hash = tmp_for < tmp_rev ? tmp_for : tmp_rev; //ret.push_back(r_hash);
+            if (hash_to_depth[r_hash] > minDepth){
+#pragma omp critical
+                ret.push_back(r_hash);
+            }
+        }
+
+        if (ret.size() == 0){
+            return ret;
+        }
+        std::sort(ret.begin(), ret.end());
+
+        int hashmax = hashSize < ret.size() ? hashSize : ret.size() - 1 ;
+
+        return useBottom ?
+            vector<int64_t> (ret.begin(), ret.begin() + hashmax) :
+            vector<int64_t> (ret.rbegin(),ret.rbegin() + hashmax);
+    }
+
+    vector<int64_t> minhash_64(string seq, int k, int hashSize, bool useBottom){
+        vector<string> kmers = kmerize(seq, k);
+        vector<int64_t> ret(kmers.size(), 0);
+
+        for (int i = 0; i < kmers.size(); i++){
+
+            uint32_t seed = 101;
+            uint32_t khash[4];
+            uint32_t rev_rev_khash[4];
+            const char*
+                forward = kmers[i].c_str();
+            string rrf = reverse(reverse_complement(kmers[i]));
+            const char*
+                rev_rev_forward = rrf.c_str();
+
+            MurmurHash3_x64_128(forward, strlen(forward), seed, khash);
+            MurmurHash3_x64_128(rev_rev_forward, strlen(rev_rev_forward), seed, rev_rev_khash);
+
+            int64_t tmp_for = int64_t(khash[2]) << 32 | int64_t(khash[1]);
+            int64_t tmp_rev = int64_t(rev_rev_khash[2]) << 32 | int64_t(rev_rev_khash[1]);
+            ;
+
+            ret[i] = tmp_for < tmp_rev ? tmp_for : tmp_rev;
+            //cerr << "kmer: " << kmers[i] << tmp_for << " " << tmp_rev << endl;
+            //ret.push_back(tmp_for < tmp_rev ? tmp_for : tmp_rev);
+        }
+
+        std::sort(ret.begin(), ret.end());
+
+
+        if (useBottom){
+            return vector<int64_t> (ret.begin(), ret.begin() + hashSize);
         }
         else{
-            i++;
+            return vector<int64_t> (ret.rbegin(), ret.rbegin() + hashSize);
         }
     }
 
-    return ret;
-}
-
-vector<string> kmer_intersection(vector<string> alpha, vector<string> beta){
-    vector<string> ret;
-    ret.reserve(alpha.size());
-    int i = 0;
-    int j = 0;
-    while(i < alpha.size() && j < beta.size()){
-        if (alpha[i] == beta[j]){
-            ret.push_back(alpha[i]);
-            i++;
-            j++;
-        }
-        else if (alpha[i] > beta[j]){
-            j++;
-        }
-        else{
-            i++;
-        }
+    vector<int64_t> top_minhash_64(string seq, int k, int hashSize){
+        return minhash_64(seq, k, hashSize, false);
     }
 
-    return ret;
-}
+    vector<int64_t> bottom_minhash_64(string seq, int k, int hashSize){
+        return minhash_64(seq, k, hashSize, true);
+    }
 
-vector<int64_t> hash_union(vector<int64_t> alpha, vector<int64_t> beta){
-    vector<int64_t> ret;
+    vector<int64_t> hash_intersection(vector<int64_t> alpha, vector<int64_t> beta){
+        vector<int64_t> ret;
+        ret.reserve(alpha.size());
+        int i = 0;
+        int j = 0;
+        while (i < alpha.size() && j < beta.size()){
+            if (alpha[i] == beta[j]){
+                ret.push_back(alpha[i]);
+                i++;
+                j++;
+            }
+            else if (alpha[i] > beta[j]){
+                j++;
+            }
+            else{
+                i++;
+            }
+        }
+
+        return ret;
+    }
+
+    vector<string> kmer_intersection(vector<string> alpha, vector<string> beta){
+        vector<string> ret;
+        ret.reserve(alpha.size());
+        int i = 0;
+        int j = 0;
+        while(i < alpha.size() && j < beta.size()){
+            if (alpha[i] == beta[j]){
+                ret.push_back(alpha[i]);
+                i++;
+                j++;
+            }
+            else if (alpha[i] > beta[j]){
+                j++;
+            }
+            else{
+                i++;
+            }
+        }
+
+        return ret;
+    }
+
+    vector<int64_t> hash_union(vector<int64_t> alpha, vector<int64_t> beta){
+        vector<int64_t> ret;
 
 
-    ret.reserve(alpha.size() + beta.size());
-    ret = vector<int64_t> (alpha.begin(), alpha.end());
-    ret.insert(ret.end(), beta.begin(), beta.end());
-    return ret;
-}
+        ret.reserve(alpha.size() + beta.size());
+        ret = vector<int64_t> (alpha.begin(), alpha.end());
+        ret.insert(ret.end(), beta.begin(), beta.end());
+        return ret;
+    }
 
-vector<int64_t> hash_set_intersection(vector<int64_t> alpha, vector<int64_t> beta){
-    return hash_intersection(v_set(alpha), v_set(beta));
+    vector<int64_t> hash_set_intersection(vector<int64_t> alpha, vector<int64_t> beta){
+        return hash_intersection(v_set(alpha), v_set(beta));
 
-}
+    }
 
-vector<int64_t> hash_set_union(vector<int64_t> alpha, vector<int64_t> beta){
-    return v_set(hash_union(alpha, beta));
-}
+    vector<int64_t> hash_set_union(vector<int64_t> alpha, vector<int64_t> beta){
+        return v_set(hash_union(alpha, beta));
+    }
+
+    priority_queue<string> kmer_heap_intersection(priority_queue<string> alpha, priority_queue<string> beta){ 
+        vector<string> base;
+        base.reserve(alpha.size());
+        while (alpha.size() != 0 && beta.size() != 0){
+            if (alpha.top() == beta.top()){
+                base.push_back(alpha.top());
+                alpha.pop();
+                beta.pop();
+            }
+            else if (alpha.top() > beta.top()){
+                alpha.pop();
+            }
+            else if (alpha.top() < beta.top()){
+                beta.pop();
+            }
+        }
+
+        priority_queue<string> ret(base.begin(), base.end());
+        return ret;
+    }
 
 }

@@ -2,6 +2,7 @@
 #define MKMH_D
 
 #include <vector>
+#include <queue>
 #include <set>
 #include <unordered_map>
 #include <string>
@@ -34,6 +35,15 @@ namespace mkmh{
 
     /* Returns a deduplicated set of string kmers */
     vector<string> kmer_set(vector<string> kmers);
+
+    /* Returns a heap (priority queue) of the kmers of a read converted to ints. */
+    
+    /* Returns a heap (priority queue) of the kmers of the read */
+    priority_queue<string> kmer_heap(string seq, vector<int> k);
+
+    /* Converts a string kmer to an integer representation */
+    int64_t kmer_to_integer(string kmer);
+
 
     /* Returns a deduplicated set of kmers or hashes as a vector<T> */
     template<typename T>
@@ -86,6 +96,8 @@ namespace mkmh{
 
     /* Returns the intersection of both sets. Duplicates are included only once */
     vector<int64_t> hash_set_intersection(vector<int64_t> alpha, vector<int64_t> beta);
+
+    priority_queue<string> kmer_heap_intersection(priority_queue<string> alpha, priority_queue<string> beta);
 }
 
 #endif
