@@ -98,6 +98,12 @@ namespace mkmh{
     vector<int64_t> hash_set_intersection(vector<int64_t> alpha, vector<int64_t> beta);
 
     priority_queue<string> kmer_heap_intersection(priority_queue<string> alpha, priority_queue<string> beta);
+
+    vector<int64_t> allhash_unsorted_64_fast(const char* seq, vector<int>& k_sizes);
+
+    vector<int64_t> calc_hashes(string seq, int k);
+
+    vector<int64_t> minhash_64_fast(string seq, vector<int> kmer, int sketchSize, bool isBottom=true);
 }
 
 #endif
