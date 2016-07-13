@@ -231,8 +231,8 @@ namespace mkmh{
             string rrf = reverse(reverse_complement(kmers[i]));
             const char* rev_rev_forward = rrf.c_str();
 
-            MurmurHash3_x64_128(forward, strlen(forward), 101, khash);
-            MurmurHash3_x64_128(rev_rev_forward, strlen(rev_rev_forward), 101, rev_rev_khash);
+            MurmurHash3_x64_128(forward, strlen(forward), 42, khash);
+            MurmurHash3_x64_128(rev_rev_forward, strlen(rev_rev_forward), 42, rev_rev_khash);
 
             int64_t tmp_for = int64_t(khash[2]) << 32 | int64_t(khash[1]);
             int64_t tmp_rev = int64_t(rev_rev_khash[2]) << 32 | int64_t(rev_rev_khash[1]);
@@ -248,8 +248,6 @@ namespace mkmh{
         //ret.reserve(kmers.size());
 
         vector<int64_t> ret(kmers.size(), 0);
-        //const char* forward;
-        //const char* rev_rev_forward;
         //#pragma omp parallel for
         for (int i = 0; i < kmers.size(); i++){
             uint32_t khash[4];
@@ -260,8 +258,8 @@ namespace mkmh{
             string rrf = reverse(reverse_complement(kmers[i]));
             const char* rev_rev_forward = rrf.c_str();
 
-            MurmurHash3_x64_128(forward, strlen(forward), 101, khash);
-            MurmurHash3_x64_128(rev_rev_forward, strlen(rev_rev_forward), 101, rev_rev_khash);
+            MurmurHash3_x64_128(forward, strlen(forward), 42, khash);
+            MurmurHash3_x64_128(rev_rev_forward, strlen(rev_rev_forward), 42, rev_rev_khash);
 
             int64_t tmp_for = int64_t(khash[2]) << 32 | int64_t(khash[1]);
             int64_t tmp_rev = int64_t(rev_rev_khash[2]) << 32 | int64_t(rev_rev_khash[1]);
@@ -325,8 +323,8 @@ namespace mkmh{
             string rrf = reverse(reverse_complement(kmers[i]));
             const char* rev_rev_forward = rrf.c_str();
 
-            MurmurHash3_x64_128(forward, strlen(forward), 101, khash);
-            MurmurHash3_x64_128(rev_rev_forward, strlen(rev_rev_forward), 101, rev_rev_khash);
+            MurmurHash3_x64_128(forward, strlen(forward), 42, khash);
+            MurmurHash3_x64_128(rev_rev_forward, strlen(rev_rev_forward), 42, rev_rev_khash);
 
             int64_t tmp_for = int64_t(khash[2]) << 32 | int64_t(khash[1]);
             int64_t tmp_rev = int64_t(rev_rev_khash[2]) << 32 | int64_t(rev_rev_khash[1]);
@@ -335,7 +333,7 @@ namespace mkmh{
             //ret[i] = r_hash;
             int64_t r_hash = tmp_for < tmp_rev ? tmp_for : tmp_rev; //ret.push_back(r_hash);
             if (hash_to_depth[r_hash] > minDepth){
-#pragma omp critical
+                #pragma omp critical
                 ret.push_back(r_hash);
             }
         }
@@ -358,7 +356,7 @@ namespace mkmh{
 
         for (int i = 0; i < kmers.size(); i++){
 
-            uint32_t seed = 101;
+            uint32_t seed = 42;
             uint32_t khash[4];
             uint32_t rev_rev_khash[4];
             const char*
