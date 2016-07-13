@@ -321,8 +321,6 @@ namespace mkmh{
         //ret.reserve(kmers.size());
 
         vector<int64_t> ret(kmers.size(), 0);
-        //const char* forward;
-        //const char* rev_rev_forward;
         //#pragma omp parallel for
         for (int i = 0; i < kmers.size(); i++){
             uint32_t khash[4];
