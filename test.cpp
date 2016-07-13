@@ -28,6 +28,22 @@ bool testify(int t_num, string test, bool x){
     }   
 }
 
+bool same(vector<int64_t> x, vector<int64_t> y){
+    if (x.size() != y.size()){
+        return false;
+    }
+    
+    std::sort(x.begin(), x.end());
+    std::sort(y.begin(), y.end());
+    for (int i = 0; i < x.size(); i++){
+        if (x[i] != y[i]){
+            return false;
+        }
+    }
+    return true;
+
+}
+
 int main(){
     int t_num = 0;
 
@@ -130,6 +146,17 @@ int main(){
     }
     testify(t_num++, "Kmer heap produces expected highest kmer", (a_heap.top() == "AAA"));
 
+    vector<int64_t> a_allhash_fast = allhash_unsorted_64_fast(a.c_str(), three);
+    testify(t_num++, "allhash_unsorted_64_fast produces a hash vector of the proper length", (a_allhash_fast.size() == 10));
+    for (auto ll : a_allhash_fast){
+        cerr << ll << endl;
+    }
+    
+    vector<int> four;
+    four.push_back(4);
+
+    vector<int64_t> bottoms_fast = minhash_64_fast(seq, four, 4, true);
+    testify(t_num++, "minhash_64 and minhash_64_fast produce the same hashes", same(bottoms, bottoms_fast));
 
     return 0;
 }
