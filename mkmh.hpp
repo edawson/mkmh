@@ -103,6 +103,8 @@ namespace mkmh{
 
     vector<int64_t> calc_hashes(string seq, int k);
 
+    vector<int64_t> calc_hashes(const char* seq, int seq_length, int k);
+
     vector<int64_t> minhash_64_fast(string seq, vector<int> kmer, int sketchSize, bool isBottom=true);
 }
 

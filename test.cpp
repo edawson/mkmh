@@ -36,6 +36,7 @@ bool same(vector<int64_t> x, vector<int64_t> y){
     std::sort(x.begin(), x.end());
     std::sort(y.begin(), y.end());
     for (int i = 0; i < x.size(); i++){
+        cerr << x[i] << "\t" << y[i] << endl;
         if (x[i] != y[i]){
             return false;
         }
@@ -154,7 +155,7 @@ int main(){
     
     vector<int> four;
     four.push_back(4);
-
+    cerr << "Testing minhash 64 functions" << endl;
     vector<int64_t> bottoms_fast = minhash_64_fast(seq, four, 4, true);
     testify(t_num++, "minhash_64 and minhash_64_fast produce the same hashes", same(bottoms, bottoms_fast));
 
