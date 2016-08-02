@@ -51,6 +51,47 @@ namespace mkmh{
         return copy;
     }
 
+    const char* to_upper(char* seq, int length){
+
+        std::locale loc;
+        stringstream ret;
+        for (int i = 0; i < length; i++){
+            char c = seq[i];
+            switch (c){
+                case 'A':
+                    ret << "A";
+                    break;
+                case 'a':
+                    ret << "A";
+                    break;
+                case 'T':
+                    ret << "T";
+                    break;
+                case 't':
+                    ret << "T";
+                    break;
+                case 'C':
+                    ret << "C";
+                    break;
+                case 'c':
+                    ret << "C";
+                    break;
+                case 'G':
+                    ret << "G";
+                    break;
+                case 'g':
+                    ret << "G";
+                    break;
+                    /* Handle X, N, Y, all that stuff. */
+                default:
+                    ret << std::toupper(c, loc);
+                    break;
+                }
+            }
+
+        return ret.str().c_str();
+    }
+
     string to_upper(string seq){
         stringstream ret;
         std::locale loc;

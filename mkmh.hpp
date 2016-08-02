@@ -27,6 +27,8 @@ namespace mkmh{
     /* Capitalize all characters in a string */
     string to_upper(string seq);
 
+    const char* to_upper(char* seq, int length);
+
     /* Returns the forward and reverse-reverse complement kmers of a sequence */
     vector<string> kmerize(string seq, int k);
 
@@ -89,7 +91,6 @@ namespace mkmh{
     /* Returns the intersection of alpha and beta, including duplicates the number of times they appear in both vectors */
     vector<int64_t> hash_intersection(vector<int64_t> alpha, vector<int64_t> beta);
 
-    vector<string> kmer_intersection(vector<string> alpha, vector<string> beta);
 
     /* Returns the union of the two sets after deduplicating all duplicates */
     vector<int64_t> hash_set_union(vector<int64_t> alpha, vector<int64_t> beta);
@@ -98,6 +99,8 @@ namespace mkmh{
     vector<int64_t> hash_set_intersection(vector<int64_t> alpha, vector<int64_t> beta);
 
     priority_queue<string> kmer_heap_intersection(priority_queue<string> alpha, priority_queue<string> beta);
+
+    vector<string> kmer_intersection(vector<string> alpha, vector<string> beta);
 
     vector<int64_t> allhash_unsorted_64_fast(const char* seq, vector<int>& k_sizes);
 
