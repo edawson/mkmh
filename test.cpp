@@ -28,7 +28,9 @@ bool testify(int t_num, string test, bool x){
     }   
 }
 
-bool same(vector<int64_t> x, vector<int64_t> y){
+bool same(vector<hash_t> x, vector<hash_t> y){
+
+    bool ret = true;
     if (x.size() != y.size()){
         return false;
     }
@@ -38,10 +40,12 @@ bool same(vector<int64_t> x, vector<int64_t> y){
     for (int i = 0; i < x.size(); i++){
         cerr << x[i] << "\t" << y[i] << endl;
         if (x[i] != y[i]){
-            return false;
+            ret = false;
+            //return false;
         }
     }
-    return true;
+    return ret;
+    //return true;
 
 }
 
@@ -73,9 +77,9 @@ int main(){
     }
     testify(t_num++, "The shingles produced by kmerize are the right size", x);
 
-    vector<int64_t> ret = minhash_64(seq, 5, 5);
+    vector<hash_t> ret = minhash_64(seq, 5, 5);
     testify(t_num++, "minhash_64 produces the right number of hashes", ret.size() == 5);
-    vector<int64_t> o_ret = minhash_64(seq, 5, 5);
+    vector<hash_t> o_ret = minhash_64(seq, 5, 5);
     testify(t_num++, "minhash_64 produces the same top and bottom values in the hash", (ret[0] == o_ret[0] & ret[4] == o_ret[4]));
     
     vector<int> ret_test = {5};
@@ -93,8 +97,8 @@ int main(){
 
     /* Test top_minhash_64 and bottom_minhash_64 */
     x = true;
-    vector<int64_t> tops = top_minhash_64(seq, 4, 4);
-    vector<int64_t> bottoms = bottom_minhash_64(seq, 4, 4);
+    vector<hash_t> tops = top_minhash_64(seq, 4, 4);
+    vector<hash_t> bottoms = bottom_minhash_64(seq, 4, 4);
     for (auto e : tops){
         for (auto f : bottoms){
             if (e < f){
@@ -120,8 +124,8 @@ int main(){
     testify(t_num++, "multi_kmerize produces twice as many kmers with two kmer sizes", kmers.size() * 2 == m_kmers.size());
 
     /* Test hash union / intersection */
-    vector<int64_t> t1 = {1, 2, 3, 4, 5, 6};
-    vector<int64_t> t2 = {4, 5, 6, 7, 8, 9};
+    vector<hash_t> t1 = {1, 2, 3, 4, 5, 6};
+    vector<hash_t> t2 = {4, 5, 6, 7, 8, 9};
     testify(t_num++, "Hash intersection of two sets is the expected size.", hash_intersection(t1, t2).size() == 3);
 
     t1 = {1, 2, 3, 4, 4, 4, 5, 6};
@@ -147,7 +151,7 @@ int main(){
     }
     testify(t_num++, "Kmer heap produces expected highest kmer", (a_heap.top() == "AAA"));
 
-    vector<int64_t> a_allhash_fast = allhash_unsorted_64_fast(a.c_str(), three);
+    vector<hash_t> a_allhash_fast = allhash_unsorted_64_fast(a.c_str(), three);
     testify(t_num++, "allhash_unsorted_64_fast produces a hash vector of the proper length", (a_allhash_fast.size() == 10));
     for (auto ll : a_allhash_fast){
         cerr << ll << endl;
@@ -156,7 +160,7 @@ int main(){
     vector<int> four;
     four.push_back(4);
     cerr << "Testing minhash 64 functions" << endl;
-    vector<int64_t> bottoms_fast = minhash_64_fast(seq, four, 4, true);
+    vector<hash_t> bottoms_fast = minhash_64_fast(seq, four, 4, true);
     testify(t_num++, "minhash_64 and minhash_64_fast produce the same hashes", same(bottoms, bottoms_fast));
 
     return 0;

@@ -18,9 +18,35 @@
 namespace mkmh{
     using namespace std;
 
+    typedef uint64_t hash_t;
+
+    inline bool canonical(string x){
+        bool allATGC = true;
+        for (int i = 0; i < x.length(); i++){
+            char c = x[i];
+            switch (c){
+                case 'A':
+                case 'a':
+                case 'T':
+                case 't':
+                case 'C':
+                case 'c':
+                case 'G':
+                case 'g':
+                    continue;
+                    break;
+                default:
+                    allATGC = false;
+                    break;
+            }
+        }
+        return allATGC;
+    };
+
+
     /* Reverse the string seq */
     string reverse(string seq);
-    
+
     /* Reverse complement the string seq (assumes seq is DNA, and returns non-ACTG letters as-is*/
     string reverse_complement(string seq);
 
@@ -39,21 +65,21 @@ namespace mkmh{
     vector<string> kmer_set(vector<string> kmers);
 
     /* Returns a heap (priority queue) of the kmers of a read converted to ints. */
-    
+
     /* Returns a heap (priority queue) of the kmers of the read */
     priority_queue<string> kmer_heap(string seq, vector<int> k);
 
     /* Converts a string kmer to an integer representation */
-    int64_t kmer_to_integer(string kmer);
+    hash_t kmer_to_integer(string kmer);
 
 
     /* Returns a deduplicated set of kmers or hashes as a vector<T> */
     template<typename T>
-    inline vector<T> v_set(vector<T> kmers){
-        set<T> s = set<T>(kmers.begin(), kmers.end());
-        vector<T> ret = vector<T>(s.begin(), s.end());
-        return ret;
-    }
+        inline vector<T> v_set(vector<T> kmers){
+            set<T> s = set<T>(kmers.begin(), kmers.end());
+            vector<T> ret = vector<T>(s.begin(), s.end());
+            return ret;
+        }
 
     /* Returns the forward shingles size k of a sequence */
     vector<string> shingle(string seq, int k);
@@ -61,54 +87,59 @@ namespace mkmh{
     /* Returns the forward shingles of all k sizes of a sequence */
     vector<string> multi_shingle(string seq, vector<int> k);
 
-    /* Return all hashes, unsorted, as fast as possible */
-    vector<int64_t> allhash_unsorted_64(string& seq, vector<int>& k);
+    /* Return all hashes, unsorted*/
+    vector<hash_t> allhash_unsorted_64(string& seq, vector<int>& k);
 
     /* Returns the lowest hashSize hashes of the kmers (length k...k` in k) of seq */
-    vector<int64_t> minhash_64(string& seq, vector<int>& k, int hashSize, bool useBottom=true);
+    vector<hash_t> minhash_64(string& seq, vector<int>& k, int hashSize, bool useBottom=true);
 
     /* Returns the bottom/top hashSize hashes of kmers size k in seq */ 
-    vector<int64_t> minhash_64(string seq, int k, int hashSize, bool useBottom=true);
+    vector<hash_t> minhash_64(string seq, int k, int hashSize, bool useBottom=true);
 
     /* Returns the bottom/top hashSize hashes of kmers size k which 
      * occur more than minDepth times, based on the depth in hash_to_depth */
-    vector<int64_t> minhash_64_depth_filter(string& seq, vector<int>& k,
-                            int hashSize, bool useBottom, int minDepth,
-                            unordered_map<int64_t, int>& hash_to_depth);
+    vector<hash_t> minhash_64_depth_filter(string& seq, vector<int>& k,
+            int hashSize, bool useBottom, int minDepth,
+            unordered_map<hash_t, int>& hash_to_depth);
     /* Takes in a list of pre-computed hashes and returns the MinHash (size hashSize)
      * of the hashes that pass the depth filter */
-    vector<int64_t> minhash_64_depth_filter(vector<int64_t>& hashes, int hashSize, bool useBottom,
-                                    int min_depth, unordered_map<int64_t, int>& hash_to_depth);
+    vector<hash_t> minhash_64_depth_filter(vector<hash_t>& hashes, int hashSize, bool useBottom,
+            int min_depth, unordered_map<hash_t, int>& hash_to_depth);
     /* helper function: returns the top hashSize hashes of the kmers size k in seq */
-    vector<int64_t> top_minhash_64(string seq, int k, int hashSize);
+    vector<hash_t> top_minhash_64(string seq, int k, int hashSize);
 
     /* helper function: returns the bottom hashSize hashes of the kmers size k in seq */
-    vector<int64_t> bottom_minhash_64(string seq, int k, int hashSize);
+    vector<hash_t> bottom_minhash_64(string seq, int k, int hashSize);
 
     /* Returns the union of the hashes in alpha and beta, including duplicates */
-    vector<int64_t> hash_union(vector<int64_t> alpha, vector<int64_t> beta);
+    vector<hash_t> hash_union(vector<hash_t> alpha, vector<hash_t> beta);
 
     /* Returns the intersection of alpha and beta, including duplicates the number of times they appear in both vectors */
-    vector<int64_t> hash_intersection(vector<int64_t> alpha, vector<int64_t> beta);
+    vector<hash_t> hash_intersection(vector<hash_t> alpha, vector<hash_t> beta);
 
 
     /* Returns the union of the two sets after deduplicating all duplicates */
-    vector<int64_t> hash_set_union(vector<int64_t> alpha, vector<int64_t> beta);
+    vector<hash_t> hash_set_union(vector<hash_t> alpha, vector<hash_t> beta);
 
     /* Returns the intersection of both sets. Duplicates are included only once */
-    vector<int64_t> hash_set_intersection(vector<int64_t> alpha, vector<int64_t> beta);
+    vector<hash_t> hash_set_intersection(vector<hash_t> alpha, vector<hash_t> beta);
 
     priority_queue<string> kmer_heap_intersection(priority_queue<string> alpha, priority_queue<string> beta);
 
     vector<string> kmer_intersection(vector<string> alpha, vector<string> beta);
 
-    vector<int64_t> allhash_unsorted_64_fast(const char* seq, vector<int>& k_sizes);
+    vector<hash_t> allhash_unsorted_64_fast(const char* seq, vector<int>& k_sizes);
 
-    vector<int64_t> calc_hashes(string seq, int k);
 
-    vector<int64_t> calc_hashes(const char* seq, int seq_length, int k);
+    tuple<hash_t*, int> allhash_unsorted_64_fast(const char* seq, int& seqlen, vector<int>& k_sizes);
 
-    vector<int64_t> minhash_64_fast(string seq, vector<int> kmer, int sketchSize, bool isBottom=true);
+    vector<hash_t> minhashes(hash_t* hashes, int num_hashes, int sketch_size, bool useBottom=true);
+
+    vector<hash_t> calc_hashes(string seq, int k);
+
+    vector<hash_t> calc_hashes(const char* seq, int seq_length, int k);
+
+    vector<hash_t> minhash_64_fast(string seq, vector<int> kmer, int sketchSize, bool isBottom=true);
 }
 
 #endif
