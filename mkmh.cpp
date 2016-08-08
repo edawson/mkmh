@@ -51,45 +51,42 @@ namespace mkmh{
         return copy;
     }
 
-    const char* to_upper(char* seq, int length){
+    void to_upper(char* seq, int length){
 
-        std::locale loc;
-        stringstream ret;
         for (int i = 0; i < length; i++){
             char c = seq[i];
             switch (c){
                 case 'A':
-                    ret << "A";
+                    seq[i] = 'A';
                     break;
                 case 'a':
-                    ret << "A";
+                    seq[i] = 'A';
                     break;
                 case 'T':
-                    ret << "T";
+                    seq[i] = 'T';
                     break;
                 case 't':
-                    ret << "T";
+                    seq[i] = 'T';
                     break;
                 case 'C':
-                    ret << "C";
+                    seq[i] = 'C';
                     break;
                 case 'c':
-                    ret << "C";
+                    seq[i] = 'C';
                     break;
                 case 'G':
-                    ret << "G";
+                    seq[i] = 'G';
                     break;
                 case 'g':
-                    ret << "G";
+                    seq[i] = 'G';
                     break;
                     /* Handle X, N, Y, all that stuff. */
                 default:
-                    ret << std::toupper(c, loc);
+                    seq[i] = seq[i];
                     break;
             }
         }
 
-        return ret.str().c_str();
     }
 
     string to_upper(string seq){
@@ -347,17 +344,17 @@ namespace mkmh{
                 string rr_string = reverse(reverse_complement(string(start, k)));
                 const char* rev_rev_s = rr_string.c_str();
 
-                if (!canonical(rr_string)){
-                    ret [track + i] = 0;
-                }
-                else{
+                //if (!canonical(rr_string)){
+                //    ret [track + i] = 0;
+                //}
+                //else{
                     MurmurHash3_x64_128(start, k, 42, khash);
                     MurmurHash3_x64_128(rev_rev_s, k, 42, rev_rev_khash);
 
                     hash_t tmp_rev = *((hash_t *) rev_rev_khash);
                     hash_t tmp_for = *((hash_t *) khash);
                     ret[ track + i ] =  tmp_for < tmp_rev ? tmp_for : tmp_rev;
-                }
+                //}
             }
             track += i;
         }
@@ -370,7 +367,20 @@ namespace mkmh{
     vector<hash_t> minhashes(hash_t* hashes, int num_hashes, int sketch_size, bool useBottom){
        vector<hash_t> x = vector<hash_t>(hashes, hashes + num_hashes); 
        std::sort(x.begin(), x.end());
-       return x;
+
+       int valid_ind = 0;
+       while (x[valid_ind] == 0){
+            valid_ind++;
+       }
+
+       /*for (auto xx : x){
+           if (xx != 0){
+            cerr << xx << endl;
+           }
+       }*/
+
+       int hashmax = valid_ind + sketch_size < num_hashes ? valid_ind + sketch_size : num_hashes - 1;
+       return std::vector<hash_t>(x.begin() + valid_ind, x.begin() + hashmax);
     }
 
     vector<hash_t> minhash_64(string& seq, vector<int>& k, int hashSize, bool useBottom){

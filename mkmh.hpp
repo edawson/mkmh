@@ -52,8 +52,8 @@ namespace mkmh{
 
     /* Capitalize all characters in a string */
     string to_upper(string seq);
-
-    const char* to_upper(char* seq, int length);
+    
+    void to_upper(char* seq, int length);
 
     /* Returns the forward and reverse-reverse complement kmers of a sequence */
     vector<string> kmerize(string seq, int k);
