@@ -5,8 +5,29 @@ namespace mkmh{
 
     using namespace std;
 
+    unordered_map<char, char> RCOMP (
+            {
+            {'A', 'T'},
+            {'a', 'T'},
+            {'T','A'},
+            {'t', 'a'},
+            {'C', 'G'},
+            {'c', 'G'},
+            {'G', 'C'},
+            {'g', 'C'}
+
+            });
+
     string reverse_complement(string seq){
         stringstream ret;
+/**
+        for (int i = 0; i < seq.size(); i++){
+            ret << RCOMP[seq[i]];
+
+        }
+        return ret.str();
+
+        **/
 
         for (int i = 0; i < seq.length(); i++){
             char c = seq[i];
@@ -35,7 +56,7 @@ namespace mkmh{
                 case 'g':
                     ret << "c";
                     break;
-                    /* Handle X, N, Y, all that stuff. */
+                     //Handle X, N, Y, all that stuff. 
                 default:
                     ret << c;
                     break;
