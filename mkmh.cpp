@@ -281,6 +281,51 @@ namespace mkmh{
         return calc_hashes(x, int(seq.length()), k);
     }
 
+    hash_t calc_hash(string seq){
+        char khash[16];
+        char rev_rev_khash[16];
+        const char* start = seq.c_str();
+        string rr_string = reverse(reverse_complement(string(start, seq.size())));
+        const char* rev_rev_s = rr_string.c_str();
+        if (!canonical(rr_string)){
+               //cerr << "Noncanonical bases found; exluding... " << rr_string << endl;
+               return 0;
+        }
+            // need to handle reverse of char*
+        MurmurHash3_x64_128(start, seq.size(), 42, khash);
+        MurmurHash3_x64_128(rev_rev_s, seq.size(), 42, rev_rev_khash);
+
+            //hash_t tmp_for = hash_t(khash[2]) << 32 | hash_t(khash[1]);
+            //hash_t tmp_rev = hash_t(rev_rev_khash[2]) << 32 | hash_t(rev_rev_khash[1]);
+        hash_t tmp_rev = *((hash_t *) rev_rev_khash);
+        hash_t tmp_for = *((hash_t *) khash);
+        return ( tmp_for < tmp_rev ? tmp_for : tmp_rev );
+
+    }
+
+    hash_t calc_hash(char* seq, int seqlen){
+        char khash[16];
+        char rev_rev_khash[16];
+        const char* start = seq;
+        string rr_string = reverse(reverse_complement(string(start, seqlen)));
+        const char* rev_rev_s = rr_string.c_str();
+        if (!canonical(rr_string)){
+               //cerr << "Noncanonical bases found; exluding... " << rr_string << endl;
+            return 0;     
+        }
+            // need to handle reverse of char*
+        MurmurHash3_x64_128(start, seqlen, 42, khash);
+        MurmurHash3_x64_128(rev_rev_s, seqlen, 42, rev_rev_khash);
+
+            //hash_t tmp_for = hash_t(khash[2]) << 32 | hash_t(khash[1]);
+            //hash_t tmp_rev = hash_t(rev_rev_khash[2]) << 32 | hash_t(rev_rev_khash[1]);
+        hash_t tmp_rev = *((hash_t *) rev_rev_khash);
+        hash_t tmp_for = *((hash_t *) khash);
+        return ( tmp_for < tmp_rev ? tmp_for : tmp_rev );
+
+       
+    }
+
     vector<hash_t> calc_hashes(const char* x, int seq_length, int k){
         vector<hash_t> ret;
         ret.reserve(seq_length - k);

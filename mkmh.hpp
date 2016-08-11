@@ -135,6 +135,10 @@ namespace mkmh{
 
     vector<hash_t> minhashes(hash_t* hashes, int num_hashes, int sketch_size, bool useBottom=true);
 
+    hash_t calc_hash(string seq);
+
+    hash_t calc_hash(char* seq, int seqlen);
+
     vector<hash_t> calc_hashes(string seq, int k);
 
     vector<hash_t> calc_hashes(const char* seq, int seq_length, int k);
