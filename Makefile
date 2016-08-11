@@ -2,7 +2,7 @@ IS_ICPC:= $(shell command -v icpc 2> /dev/null)
 
 ifdef IS_ICPC
 	CXX:=icpc
-	CXXFLAGS:= -O3 -std=c++11 -xAVX -openmp -funroll-loops
+	CXXFLAGS:= -O3 -std=c++11 -xAVX -qopenmp -funroll-loops
 else
 	CXX:=g++
 	CXXFLAGS:= -O3 -std=c++11 -fopenmp -mtune=native
