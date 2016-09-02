@@ -89,6 +89,15 @@ namespace mkmh{
     }
 
     void to_upper(char* seq, int length){
+        
+        for (int i = 0; i < length; i++){
+            char c = seq[i];
+            seq[i] = ( (c - 91) > 0 ? c - 32 : c);
+        }
+    }
+
+    /**
+    void to_upper(char* seq, int length){
 
         for (int i = 0; i < length; i++){
             char c = seq[i];
@@ -117,7 +126,7 @@ namespace mkmh{
                 case 'g':
                     seq[i] = 'G';
                     break;
-                    /* Handle X, N, Y, all that stuff. */
+                    // Handle X, N, Y, all that stuff.
                 default:
                     seq[i] = seq[i];
                     break;
@@ -125,7 +134,7 @@ namespace mkmh{
         }
 
     }
-
+**/
     string to_upper(string seq){
         stringstream ret;
         std::locale loc;
