@@ -30,7 +30,7 @@ namespace mkmh{
      */
     void reverse_reverse_complement(const char* seq, char* ret, int len){
         for (int i = len - 1; i >=0; i--){
-            ret[i] = (char) rev_arr[ (int) seq[i] - 65];
+            ret[ len - 1 - i ] = (char) rev_arr[ (int) seq[i] - 65];
         }
     }
 
@@ -432,7 +432,7 @@ namespace mkmh{
                 //}
                 //else{
                     MurmurHash3_x64_128(start, k, 42, khash);
-                    MurmurHash3_x64_128(rev_rev_s, k, 42, rev_rev_khash);
+                    MurmurHash3_x64_128((const char *) rev_rev_s, k, 42, rev_rev_khash);
 
                     hash_t tmp_rev = *((hash_t *) rev_rev_khash);
                     hash_t tmp_for = *((hash_t *) khash);
