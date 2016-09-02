@@ -43,12 +43,36 @@ namespace mkmh{
         return allATGC;
     };
 
+    inline bool canonical(const char* x, int len){
+        bool allATGC = true;
+        for (int i = 0; i < len; ++i){
+            char c = x[i];
+            switch (c){
+                case 'A':
+                case 'a':
+                case 'T':
+                case 't':
+                case 'C':
+                case 'c':
+                case 'G':
+                case 'g':
+                    continue;
+                    break;
+                default:
+                    allATGC = false;
+                    break;
+            }
+        }
+        return allATGC;
+    };
 
     /* Reverse the string seq */
     string reverse(string seq);
 
     /* Reverse complement the string seq (assumes seq is DNA, and returns non-ACTG letters as-is*/
     string reverse_complement(string seq);
+
+    void reverse_reverse_complement(const char* seq, char* ret, int len);
 
     /* Capitalize all characters in a string */
     string to_upper(string seq);

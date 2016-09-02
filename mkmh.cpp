@@ -18,6 +18,22 @@ namespace mkmh{
 
             });
 
+    /**
+     * TODO: move to_upper and rev_comp and reverse to C-style
+     * rip out the rev_comp_helper function
+     * move chars to integers for speed
+     */
+        char rev_arr [26] = {84, 66, 71, 68, 69, 70, 67, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 65,
+                       85, 86, 87, 88, 89, 90};
+     /*
+     * char[26] up_arr = {};
+     */
+    void reverse_reverse_complement(const char* seq, char* ret, int len){
+        for (int i = len - 1; i >=0; --i){
+            ret[i] = rev_arr[ (int) seq[i] - 65];
+        }
+    }
+
     string reverse_complement(string seq){
         stringstream ret;
 /**
@@ -303,18 +319,19 @@ namespace mkmh{
     }
 
     hash_t calc_hash(string seq){
+        int k = seq.length();
         char khash[16];
         char rev_rev_khash[16];
         const char* start = seq.c_str();
-        string rr_string = reverse(reverse_complement(string(start, seq.size())));
-        const char* rev_rev_s = rr_string.c_str();
-        if (!canonical(rr_string)){
-               //cerr << "Noncanonical bases found; exluding... " << rr_string << endl;
-               return 0;
+        char* rev_rev_s = new char[k]; 
+        reverse_reverse_complement(start, rev_rev_s, k);
+        if (!canonical(rev_rev_s, k)){
+            //cerr << "Noncanonical bases found; exluding... " << rr_string << endl;
+            //continue;     
         }
-            // need to handle reverse of char*
+ 
         MurmurHash3_x64_128(start, seq.size(), 42, khash);
-        MurmurHash3_x64_128(rev_rev_s, seq.size(), 42, rev_rev_khash);
+        MurmurHash3_x64_128((const char*)rev_rev_s, seq.size(), 42, rev_rev_khash);
 
             //hash_t tmp_for = hash_t(khash[2]) << 32 | hash_t(khash[1]);
             //hash_t tmp_rev = hash_t(rev_rev_khash[2]) << 32 | hash_t(rev_rev_khash[1]);
@@ -328,15 +345,15 @@ namespace mkmh{
         char khash[16];
         char rev_rev_khash[16];
         const char* start = seq;
-        string rr_string = reverse(reverse_complement(string(start, seqlen)));
-        const char* rev_rev_s = rr_string.c_str();
-        if (!canonical(rr_string)){
-               //cerr << "Noncanonical bases found; exluding... " << rr_string << endl;
-            return 0;     
+        char* rev_rev_s = new char[seqlen];
+        reverse_reverse_complement(start, rev_rev_s, seqlen);
+        if (!canonical(rev_rev_s, seqlen)){
+            //cerr << "Noncanonical bases found; exluding... " << rr_string << endl;
+            //continue;     
         }
             // need to handle reverse of char*
         MurmurHash3_x64_128(start, seqlen, 42, khash);
-        MurmurHash3_x64_128(rev_rev_s, seqlen, 42, rev_rev_khash);
+        MurmurHash3_x64_128( (const char*) rev_rev_s, seqlen, 42, rev_rev_khash);
 
             //hash_t tmp_for = hash_t(khash[2]) << 32 | hash_t(khash[1]);
             //hash_t tmp_rev = hash_t(rev_rev_khash[2]) << 32 | hash_t(rev_rev_khash[1]);
@@ -355,15 +372,16 @@ namespace mkmh{
             char khash[16];
             char rev_rev_khash[16];
             const char* start = x + i;
-            string rr_string = reverse(reverse_complement(string(start, k)));
-            const char* rev_rev_s = rr_string.c_str();
-            if (!canonical(rr_string)){
+
+            char* rev_rev_s = new char[k];
+            reverse_reverse_complement(start, rev_rev_s, k);
+            if (!canonical(rev_rev_s, k)){
                 //cerr << "Noncanonical bases found; exluding... " << rr_string << endl;
                 continue;     
             }
             // need to handle reverse of char*
             MurmurHash3_x64_128(start, k, 42, khash);
-            MurmurHash3_x64_128(rev_rev_s, k, 42, rev_rev_khash);
+            MurmurHash3_x64_128((const char*) rev_rev_s, k, 42, rev_rev_khash);
 
             //hash_t tmp_for = hash_t(khash[2]) << 32 | hash_t(khash[1]);
             //hash_t tmp_rev = hash_t(rev_rev_khash[2]) << 32 | hash_t(rev_rev_khash[1]);
@@ -407,20 +425,20 @@ namespace mkmh{
                 char khash[16];
                 char rev_rev_khash[16];
                 const char* start = seq + i;
-                string rr_string = reverse(reverse_complement(string(start, k)));
-                const char* rev_rev_s = rr_string.c_str();
-
-                //if (!canonical(rr_string)){
-                //    ret [track + i] = 0;
-                //}
-                //else{
+                char* rev_rev_s = new char[k];
+                reverse_reverse_complement(start, rev_rev_s, k);
+                if (!canonical(start, k)){
+                    ret[track + i] = 0;
+                }
+                else{
                     MurmurHash3_x64_128(start, k, 42, khash);
                     MurmurHash3_x64_128(rev_rev_s, k, 42, rev_rev_khash);
 
                     hash_t tmp_rev = *((hash_t *) rev_rev_khash);
                     hash_t tmp_for = *((hash_t *) khash);
+                    delete [] rev_rev_s;
                     ret[ track + i ] =  tmp_for < tmp_rev ? tmp_for : tmp_rev;
-                //}
+                }
             }
             track += i;
         }
