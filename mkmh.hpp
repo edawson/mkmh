@@ -151,6 +151,11 @@ namespace mkmh{
     priority_queue<string> kmer_heap_intersection(priority_queue<string> alpha, priority_queue<string> beta);
 
     vector<string> kmer_intersection(vector<string> alpha, vector<string> beta);
+    
+    
+    std::tuple<hash_t*, int> hash_intersection(hash_t* alpha, int alpha_start, int alpha_len,
+                                                hash_t* beta, int beta_start, int beta_len,
+                                                int sketch_size);
 
     vector<hash_t> allhash_unsorted_64_fast(const char* seq, vector<int>& k_sizes);
 

@@ -162,6 +162,27 @@ int main(){
     cerr << "Testing minhash 64 functions" << endl;
     vector<hash_t> bottoms_fast = minhash_64_fast(seq, four, 4, true);
     testify(t_num++, "minhash_64 and minhash_64_fast produce the same hashes", same(bottoms, bottoms_fast));
+    hash_t* fast_comp1 = new hash_t[4];
+
+    fast_comp1[0] = 1234;
+    fast_comp1[1] = 5534;
+    fast_comp1[2] = 2312;
+    fast_comp1[3] = 4532;
+    hash_t* fast_comp2 = new hash_t[4];
+    fast_comp2[0] = 1234;
+    fast_comp2[1] = 2312;
+    fast_comp2[2] = 1912;
+    fast_comp2[3] = 3333;
+
+    std::sort(fast_comp1, fast_comp1 + 4);
+    std::sort(fast_comp2, fast_comp2 + 4);
+
+    //std::tuple<hash_t*, int> hash_intersection(hash_t* alpha, int alpha_len, int alpha_start,
+    //                                                                    hash_t* beta, int beta_len, int beta_start,
+    //                               int sketch_size){
+
+    std::tuple<hash_t*, int> inter = hash_intersection(fast_comp1, 0, 4, fast_comp2, 0, 4, 4);
+    testify(t_num++, "new fast hash intersection produces the right number of values.", std::get<1>(inter) == 2);
 
     return 0;
 }

@@ -631,6 +631,45 @@ namespace mkmh{
         return ret;
     }
 
+    /**
+     * If beta_len < alpha_len
+     * j = 0
+     * for (i in beta):
+     *    if i > alpha[j]:
+     *      j++
+     *    elif i == alpha[j]:
+     *      matches.add(alpha[j])
+     *      i++
+     *      j++
+     */
+
+    std::tuple<hash_t*, int> hash_intersection(hash_t* alpha, int alpha_start, int alpha_len,
+                                                            hash_t* beta, int beta_start, int beta_len,
+                                                            int sketch_size){
+        hash_t* ret = new hash_t[ sketch_size ];
+        int ret_len = 0;
+
+        int i;
+        int j;
+        for (i = alpha_start, j = beta_start; i < alpha_len, j < beta_len;){
+            if (alpha[i] == beta[j]){
+                ret[ret_len] = alpha[i];
+                ++i;
+                ++j;
+                ++ret_len;
+            }
+            else if (alpha[i] > beta[j]){
+                ++j;
+            }
+            else{
+                ++i;
+            }
+
+        }
+
+        return std::make_tuple(ret, ret_len);
+    }
+
     vector<string> kmer_intersection(vector<string> alpha, vector<string> beta){
         vector<string> ret;
         ret.reserve(alpha.size());
