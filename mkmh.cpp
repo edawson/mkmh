@@ -643,15 +643,15 @@ namespace mkmh{
      *      j++
      */
 
-    std::tuple<hash_t*, int> hash_intersection(hash_t* alpha, int alpha_start, int alpha_len,
-                                                            hash_t* beta, int beta_start, int beta_len,
+    std::tuple<hash_t*, int> hash_intersection(hash_t alpha [ ], int alpha_start, int alpha_len,
+                                                            hash_t beta[ ], int beta_start, int beta_len,
                                                             int sketch_size){
         hash_t* ret = new hash_t[ sketch_size ];
         int ret_len = 0;
 
-        int i;
-        int j;
-        for (i = alpha_start, j = beta_start; i < alpha_len, j < beta_len;){
+        int i = alpha_start;
+        int j = beta_start;
+        while(i < alpha_len && j < beta_len){
             if (alpha[i] == beta[j]){
                 ret[ret_len] = alpha[i];
                 ++i;
@@ -666,7 +666,14 @@ namespace mkmh{
             }
 
         }
+        
+        //vector<hash_t> ret;
+        //set_intersection(alpha + alpha_start, alpha + alpha_len,
+        //                beta + beta_start, beta + beta_len,
+        //                ret.begin());
 
+
+        //return std::make_tuple(&(*ret.begin()), ret.size());
         return std::make_tuple(ret, ret_len);
     }
 
