@@ -1,4 +1,4 @@
-IS_ICPC:= $(shell command -v icpc 2> /dev/null)
+#IS_ICPC:= $(shell command -v icpc 2> /dev/null)
 
 ifdef IS_ICPC
 	CXX:=icpc
