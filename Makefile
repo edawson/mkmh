@@ -31,6 +31,8 @@ murmur3/libmurmur3.a:
 
 clean:
 	$(RM) *.o
+	$(RM) libmkmh.a
+	cd murmur3 && $(MAKE) clean
 
 clobber: clean
 	$(RM) libmkmh
