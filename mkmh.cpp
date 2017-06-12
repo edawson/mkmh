@@ -357,8 +357,8 @@ namespace mkmh{
         char* rev_rev_s = new char[seqlen];
         reverse_reverse_complement(start, rev_rev_s, seqlen);
         if (!canonical(rev_rev_s, seqlen)){
-            //cerr << "Noncanonical bases found; exluding... " << rr_string << endl;
-            //continue;     
+            cerr << "Noncanonical bases found; exluding... " << rev_rev_s << endl;
+            return 0;     
         }
             // need to handle reverse of char*
         MurmurHash3_x64_128(start, seqlen, 42, khash);
@@ -436,10 +436,10 @@ namespace mkmh{
                 const char* start = seq + i;
                 char* rev_rev_s = new char[k];
                 reverse_reverse_complement(start, rev_rev_s, k);
-                //if (!canonical(start, k)){
-                //    ret[track + i] = 0;
-                //}
-                //else{
+                if (!canonical(start, k)){
+                    ret[track + i] = 0;
+                }
+                else{
                     MurmurHash3_x64_128(start, k, 42, khash);
                     MurmurHash3_x64_128((const char *) rev_rev_s, k, 42, rev_rev_khash);
 
@@ -447,7 +447,7 @@ namespace mkmh{
                     hash_t tmp_for = *((hash_t *) khash);
                     delete [] rev_rev_s;
                     ret[ track + i ] =  tmp_for < tmp_rev ? tmp_for : tmp_rev;
-                //}
+                }
             }
             track += i;
         }
