@@ -163,6 +163,10 @@ namespace mkmh{
     /* Returns the intersection of both sets. Duplicates are included only once */
     vector<hash_t> hash_set_intersection(vector<hash_t> alpha, vector<hash_t> beta);
 
+    /* Returns two vectors, one of sequence names and one of percent similarity, sorted by percent similarity to alpha.
+     * NB: input vectors should be sorted. */
+    tuple<vector<string>, vector<double>> sort_by_similarity(vector<hash_t> alpha, vector<vector<hash_t>> comps, vector<string> comp_names);
+
     priority_queue<string> kmer_heap_intersection(priority_queue<string> alpha, priority_queue<string> beta);
 
     vector<string> kmer_intersection(vector<string> alpha, vector<string> beta);

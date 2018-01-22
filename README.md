@@ -30,5 +30,5 @@ close to maximum efficiency.
 
 
 ## Getting help
-Please reach out through (github)[https://github.com/edawson/mkmh] to post an issue,
+Please reach out through [github](https://github.com/edawson/mkmh) to post an issue,
 shoot me an email, or file a bug report.

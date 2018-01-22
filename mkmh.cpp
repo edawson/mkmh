@@ -783,6 +783,30 @@ namespace mkmh{
 
     }
 
+    tuple<vector<string>, vector<double>> sort_by_similarity(vector<hash_t> alpha, vector<vector<hash_t>> comps, vector<string> comp_names){
+        vector<string> ret_names;
+        vector<double> ret_sims;
+        vector<pair<int, double>> helper_vec;
+
+        for (int i = 0; i < comps.size(); ++i){
+            int divisor = comps[i].size();
+            int shared = hash_intersection(alpha, comps[i]).size();
+            double pct_id = (double) shared / (double) divisor;
+            helper_vec.push_back(make_pair(i, pct_id));
+        }
+        sort( helper_vec.begin( ), helper_vec.end( ), [ ]( const pair<int, double>& lhs, const pair<int, double>& rhs )
+        {
+            return lhs.second < rhs.second;
+        });
+        
+        for (int i = 0; i < helper_vec.size(); i++){
+            ret_names.push_back(comp_names[helper_vec[i].first]);
+            ret_sims.push_back(helper_vec[i].second);
+        }
+
+        return make_tuple(ret_names, ret_sims);
+    }
+
     vector<hash_t> hash_set_union(vector<hash_t> alpha, vector<hash_t> beta){
         return v_set(hash_union(alpha, beta));
     }
