@@ -5,84 +5,31 @@ namespace mkmh{
 
     using namespace std;
 
-    unordered_map<char, char> RCOMP (
-            {
-            {'A', 'T'},
-            {'a', 'T'},
-            {'T','A'},
-            {'t', 'a'},
-            {'C', 'G'},
-            {'c', 'G'},
-            {'G', 'C'},
-            {'g', 'C'}
-
-            });
-
-    /**
-     * TODO: move to_upper and rev_comp and reverse to C-style
-     * rip out the rev_comp_helper function
-     * move chars to integers for speed
-     */
-        char rev_arr [26] = {84, 66, 71, 68, 69, 70, 67, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 65,
+    char rev_arr [26] = {84, 66, 71, 68, 69, 70, 67, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 65,
                        85, 86, 87, 88, 89, 90};
      /*
      * char[26] up_arr = {};
      */
-    void reverse_reverse_complement(const char* seq, char* ret, int len){
+
+    
+    void reverse_complement(const char* seq, char* ret, int len){
         for (int i = len - 1; i >=0; i--){
             ret[ len - 1 - i ] = (char) rev_arr[ (int) seq[i] - 65];
         }
     }
 
-    string reverse_complement(string seq){
-        stringstream ret;
-/**
-        for (int i = 0; i < seq.size(); i++){
-            ret << RCOMP[seq[i]];
+    string reverse_complement(string& seq){
+        const char* s = seq.c_str();
+        int seqlen = seq.length();
+        char* ret = new char[seqlen];
+        reverse_complement(s, ret, seqlen);
+        string s_revc(ret);
 
-        }
-        return ret.str();
-
-        **/
-
-        for (int i = 0; i < seq.length(); i++){
-            char c = seq[i];
-            switch (c){
-                case 'A':
-                    ret << "T";
-                    break;
-                case 'a':
-                    ret << "t";
-                    break;
-                case 'T':
-                    ret << "A";
-                    break;
-                case 't':
-                    ret << "a";
-                    break;
-                case 'C':
-                    ret << "G";
-                    break;
-                case 'c':
-                    ret << "g";
-                    break;
-                case 'G':
-                    ret << "C";
-                    break;
-                case 'g':
-                    ret << "c";
-                    break;
-                     //Handle X, N, Y, all that stuff. 
-                default:
-                    ret << c;
-                    break;
-            }
-        }
-        return ret.str();
+        return s_revc;
 
     }
 
-    string reverse(string seq){
+    string reverse(string& seq){
         string copy = string(seq);
         std::reverse(copy.begin(), copy.end());
         return copy;
@@ -96,87 +43,14 @@ namespace mkmh{
         }
     }
 
-    /**
-    void to_upper(char* seq, int length){
+    string to_upper(string& seq){
+        char* ret_container = new char[seq.length()];
 
-        for (int i = 0; i < length; i++){
-            char c = seq[i];
-            switch (c){
-                case 'A':
-                    seq[i] = 'A';
-                    break;
-                case 'a':
-                    seq[i] = 'A';
-                    break;
-                case 'T':
-                    seq[i] = 'T';
-                    break;
-                case 't':
-                    seq[i] = 'T';
-                    break;
-                case 'C':
-                    seq[i] = 'C';
-                    break;
-                case 'c':
-                    seq[i] = 'C';
-                    break;
-                case 'G':
-                    seq[i] = 'G';
-                    break;
-                case 'g':
-                    seq[i] = 'G';
-                    break;
-                    // Handle X, N, Y, all that stuff.
-                default:
-                    seq[i] = seq[i];
-                    break;
-            }
-        }
-
-    }
-**/
-    string to_upper(string seq){
-        stringstream ret;
-        std::locale loc;
-        //for (int i = 0; i < seq.length(); i++){
-        //    ret << std::toupper(seq[i], loc);
-        //}
         for (int i = 0; i < seq.length(); i++){
             char c = seq[i];
-            switch (c){
-                case 'A':
-                    ret << "A";
-                    break;
-                case 'a':
-                    ret << "A";
-                    break;
-                case 'T':
-                    ret << "T";
-                    break;
-                case 't':
-                    ret << "T";
-                    break;
-                case 'C':
-                    ret << "C";
-                    break;
-                case 'c':
-                    ret << "C";
-                    break;
-                case 'G':
-                    ret << "G";
-                    break;
-                case 'g':
-                    ret << "G";
-                    break;
-                    /* Handle X, N, Y, all that stuff. */
-                default:
-                    ret << std::toupper(c, loc);
-                    break;
-            }
+            seq[i] =  ((c - 91) > 0 ? c - 32 : c);
         }
-
-        //std::transform(seq.begin(), str.end(), str.begin(), ::to_upper);
-        return ret.str();
+        return seq;
     }
 
     vector<string> kmer_set(vector<string> kmers){
@@ -259,6 +133,22 @@ namespace mkmh{
         }
         return ret;
     }
+
+    mkmh_kmer_list_t kmerize(char* seq, int seq_len, int k){
+        mkmh_kmer_list_t ret;
+        ret.kmers = new char*[seq_len - k];
+        ret.k = k;
+        ret.length = seq_len - k;
+        for (int i = 0; i + k < seq_len; i++){
+            char* km = new char[k];
+            memcpy(km, seq + i, k);
+            ret.kmers[i] = new char[k];
+            ret.kmers[i] = km;
+        }
+        return ret;
+    
+    }
+
     vector<string> multi_kmerize(string seq, vector<int> kSizes){
         int i = 0;
         vector<string> ret;
@@ -387,7 +277,7 @@ namespace mkmh{
         char rev_rev_khash[16];
         const char* start = seq.c_str();
         char* rev_rev_s = new char[k]; 
-        reverse_reverse_complement(start, rev_rev_s, k);
+        reverse_complement(start, rev_rev_s, k);
         if (!canonical(rev_rev_s, k)){
             cerr << "Noncanonical bases found; exluding... " << rev_rev_s << endl;
             return 0;
@@ -409,7 +299,7 @@ namespace mkmh{
         char rev_rev_khash[16];
         const char* start = seq;
         char* rev_rev_s = new char[seqlen];
-        reverse_reverse_complement(start, rev_rev_s, seqlen);
+        reverse_complement(start, rev_rev_s, seqlen);
         if (!canonical(rev_rev_s, seqlen)){
             cerr << "Noncanonical bases found; exluding... " << rev_rev_s << endl;
             return 0;
@@ -437,7 +327,7 @@ namespace mkmh{
             const char* start = x + i;
 
             char* rev_rev_s = new char[k];
-            reverse_reverse_complement(start, rev_rev_s, k);
+            reverse_complement(start, rev_rev_s, k);
             
             // need to handle reverse of char*
             MurmurHash3_x64_128(start, k, 42, khash);
@@ -492,7 +382,7 @@ namespace mkmh{
                 char rev_rev_khash[16];
                 const char* start = seq + i;
                 char* rev_rev_s = new char[k];
-                reverse_reverse_complement(start, rev_rev_s, k);
+                reverse_complement(start, rev_rev_s, k);
                 if (!canonical(start, k)){
                     ret[track + i] = 0;
                 }

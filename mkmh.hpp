@@ -19,6 +19,13 @@ namespace mkmh{
     using namespace std;
 
     typedef uint64_t hash_t;
+    typedef uint32_t k31_hash_t;
+
+    struct mkmh_kmer_list_t{
+        char** kmers;
+        int length;
+        int k;
+    };
 
     struct mkmh_minimizer {
         uint64_t pos;
@@ -74,12 +81,12 @@ namespace mkmh{
     };
 
     /* Reverse the string seq */
-    string reverse(string seq);
+    inline string reverse(string seq);
 
     /* Reverse complement the string seq (assumes seq is DNA, and returns non-ACTG letters as-is*/
-    string reverse_complement(string seq);
+    string reverse_complement(string& seq);
 
-    void reverse_reverse_complement(const char* seq, char* ret, int len);
+    void reverse_complement(const char* seq, char* ret, int len);
 
     /* Capitalize all characters in a string */
     string to_upper(string seq);
@@ -88,6 +95,9 @@ namespace mkmh{
 
     /* Returns the forward and reverse-reverse complement kmers of a sequence */
     vector<string> kmerize(string seq, int k);
+
+    mkmh_kmer_list_t kmerize(char* seq, int seq_len, int k);
+    
 
     /* Returns the forward and reverse-reverse complement kmers for all kmer sizes in k */
     vector<string> multi_kmerize(string seq, vector<int> k);
@@ -129,33 +139,51 @@ namespace mkmh{
     /* Return all hashes, unsorted*/
     vector<hash_t> allhash_unsorted_64(string& seq, vector<int>& k);
 
+    vector<hash_t> allhash_unsorted_64_fast(const char* seq, vector<int>& k_sizes);
+    
+    
+    tuple<hash_t*, int> allhash_unsorted_64_fast(const char* seq, int& seqlen, vector<int>& k_sizes);
+    
+    vector<hash_t> minhashes(hash_t* hashes, int num_hashes, int sketch_size, bool useBottom=true);    
+
     /* Returns the lowest hashSize hashes of the kmers (length k...k` in k) of seq */
     vector<hash_t> minhash_64(string& seq, vector<int>& k, int hashSize, bool useBottom=true);
 
     /* Returns the bottom/top hashSize hashes of kmers size k in seq */ 
     vector<hash_t> minhash_64(string seq, int k, int hashSize, bool useBottom=true);
 
+    /* helper function: returns the top hashSize hashes of the kmers size k in seq */
+    vector<hash_t> top_minhash_64(string seq, int k, int hashSize);
+    
+    /* helper function: returns the bottom hashSize hashes of the kmers size k in seq */
+    vector<hash_t> bottom_minhash_64(string seq, int k, int hashSize);
+
     /* Returns the bottom/top hashSize hashes of kmers size k which 
      * occur more than minDepth times, based on the depth in hash_to_depth */
     vector<hash_t> minhash_64_depth_filter(string& seq, vector<int>& k,
             int hashSize, bool useBottom, int minDepth,
             unordered_map<hash_t, int>& hash_to_depth);
+
     /* Takes in a list of pre-computed hashes and returns the MinHash (size hashSize)
      * of the hashes that pass the depth filter */
     vector<hash_t> minhash_64_depth_filter(vector<hash_t>& hashes, int hashSize, bool useBottom,
             int min_depth, unordered_map<hash_t, int>& hash_to_depth);
-    /* helper function: returns the top hashSize hashes of the kmers size k in seq */
-    vector<hash_t> top_minhash_64(string seq, int k, int hashSize);
 
-    /* helper function: returns the bottom hashSize hashes of the kmers size k in seq */
-    vector<hash_t> bottom_minhash_64(string seq, int k, int hashSize);
+    vector<hash_t> minhash_64_fast(string seq, vector<int> kmer, int sketchSize, bool isBottom=true);
 
     /* Returns the union of the hashes in alpha and beta, including duplicates */
     vector<hash_t> hash_union(vector<hash_t> alpha, vector<hash_t> beta);
 
-    /* Returns the intersection of alpha and beta, including duplicates the number of times they appear in both vectors */
-    vector<hash_t> hash_intersection(vector<hash_t> alpha, vector<hash_t> beta);
 
+     /* Returns the intersection of alpha and beta, including duplicates */   
+    std::tuple<hash_t*, int> hash_intersection(hash_t* alpha, int alpha_start, int alpha_len,
+        hash_t* beta, int beta_start, int beta_len,
+        int sketch_size);
+
+
+    /* Returns the intersection of alpha and beta, including duplicates the number of
+     times they appear in both vectors */
+    vector<hash_t> hash_intersection(vector<hash_t> alpha, vector<hash_t> beta);
 
     /* Returns the union of the two sets after deduplicating all duplicates */
     vector<hash_t> hash_set_union(vector<hash_t> alpha, vector<hash_t> beta);
@@ -171,27 +199,17 @@ namespace mkmh{
 
     vector<string> kmer_intersection(vector<string> alpha, vector<string> beta);
     
-    
-    std::tuple<hash_t*, int> hash_intersection(hash_t* alpha, int alpha_start, int alpha_len,
-                                                hash_t* beta, int beta_start, int beta_len,
-                                                int sketch_size);
-
-    vector<hash_t> allhash_unsorted_64_fast(const char* seq, vector<int>& k_sizes);
-
-
-    tuple<hash_t*, int> allhash_unsorted_64_fast(const char* seq, int& seqlen, vector<int>& k_sizes);
-
-    vector<hash_t> minhashes(hash_t* hashes, int num_hashes, int sketch_size, bool useBottom=true);
-
     hash_t calc_hash(string seq);
 
     hash_t calc_hash(char* seq, int seqlen);
+
+    //TODO void calc_hash(char* seq, int& len, hash_t* h);
 
     vector<hash_t> calc_hashes(string seq, int k);
 
     vector<hash_t> calc_hashes(const char* seq, int seq_length, int k);
 
-    vector<hash_t> minhash_64_fast(string seq, vector<int> kmer, int sketchSize, bool isBottom=true);
+
 }
 
 #endif
