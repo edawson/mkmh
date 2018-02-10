@@ -396,6 +396,8 @@ namespace mkmh{
         MurmurHash3_x64_128(start, seq.size(), 42, khash);
         MurmurHash3_x64_128((const char*)rev_rev_s, seq.size(), 42, rev_rev_khash);
 
+        delete [] rev_rev_s;
+
             //hash_t tmp_for = hash_t(khash[2]) << 32 | hash_t(khash[1]);
             //hash_t tmp_rev = hash_t(rev_rev_khash[2]) << 32 | hash_t(rev_rev_khash[1]);
         hash_t tmp_rev = *((hash_t *) rev_rev_khash);
@@ -412,11 +414,13 @@ namespace mkmh{
         reverse_reverse_complement(start, rev_rev_s, seqlen);
         if (!canonical(rev_rev_s, seqlen)){
             cerr << "Noncanonical bases found; exluding... " << rev_rev_s << endl;
-            return 0;
+            return 0;     
         }
             // need to handle reverse of char*
         MurmurHash3_x64_128(start, seqlen, 42, khash);
         MurmurHash3_x64_128( (const char*) rev_rev_s, seqlen, 42, rev_rev_khash);
+
+        delete [] rev_rev_s;
 
             //hash_t tmp_for = hash_t(khash[2]) << 32 | hash_t(khash[1]);
             //hash_t tmp_rev = hash_t(rev_rev_khash[2]) << 32 | hash_t(rev_rev_khash[1]);
@@ -455,7 +459,9 @@ namespace mkmh{
             }
 #pragma omp critical
             ret.push_back( tmp_for < tmp_rev ? tmp_for : tmp_rev );
+            delete [] rev_rev_s;
         }
+       
         return ret;
     }
 
@@ -479,36 +485,13 @@ namespace mkmh{
     tuple<hash_t*, int> allhash_unsorted_64_fast(const char* seq, int& seqlen, vector<int>& k_sizes){
         hash_t* ret;
         int ret_size = 0;
-        for (auto k : k_sizes){
-            ret_size += seqlen - k;
+        vector<hash_t> cont;
+        for (auto i : k_sizes){
+            vector<hash_t> hashes = calc_hashes(seq, seqlen, i);
+            cont.insert(cont.end(), hashes.begin(), hashes.end());
         }
-        ret = new hash_t[ret_size];
-
-        int track = 0;
-        for (auto k : k_sizes){
-            int i = 0;
-            for (int i = 0; i < seqlen - k; i++){
-                char khash[16];
-                char rev_rev_khash[16];
-                const char* start = seq + i;
-                char* rev_rev_s = new char[k];
-                reverse_reverse_complement(start, rev_rev_s, k);
-                if (!canonical(start, k)){
-                    ret[track + i] = 0;
-                }
-                else{
-                    MurmurHash3_x64_128(start, k, 42, khash);
-                    MurmurHash3_x64_128((const char *) rev_rev_s, k, 42, rev_rev_khash);
-
-                    hash_t tmp_rev = *((hash_t *) rev_rev_khash);
-                    hash_t tmp_for = *((hash_t *) khash);
-                    delete [] rev_rev_s;
-                    ret[ track + i ] =  tmp_for < tmp_rev ? tmp_for : tmp_rev;
-                }
-            }
-            track += i;
-        }
-
+        ret = &(*cont.begin());
+        ret_size = cont.size();
         return std::make_tuple(ret, ret_size);
 
     }
