@@ -29,11 +29,11 @@ namespace mkmh{
 
     }
 
-    string reverse(string& seq){
-        string copy = string(seq);
-        std::reverse(copy.begin(), copy.end());
-        return copy;
-    }
+    // string reverse(string& seq){
+    //     string copy = string(seq);
+    //     std::reverse(copy.begin(), copy.end());
+    //     return copy;
+    // }
 
     void to_upper(char* seq, int length){
         
@@ -205,6 +205,7 @@ namespace mkmh{
             }
             hash_t c_hash = calc_hash(linkmer, 2*k);
             ret[i] = c_hash;
+            delete [] linkmer;
         }
         
         return ret;

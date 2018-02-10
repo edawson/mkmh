@@ -81,7 +81,11 @@ namespace mkmh{
     };
 
     /* Reverse the string seq */
-    inline string reverse(string seq);
+    inline string reverse(string seq){
+        string copy = string(seq);
+        std::reverse(copy.begin(), copy.end());
+        return copy;
+    }
 
     /* Reverse complement the string seq (assumes seq is DNA, and returns non-ACTG letters as-is*/
     string reverse_complement(string& seq);
