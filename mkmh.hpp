@@ -20,6 +20,13 @@ namespace mkmh{
 
     typedef uint64_t hash_t;
 
+    struct mkmh_minimizer {
+        uint64_t pos;
+        uint32_t length;
+        string seq;
+        bool operator<(const mkmh_minimizer& rhs) const {return seq < rhs.seq;};
+    };
+
     inline bool canonical(string x){
         bool allATGC = true;
         for (int i = 0; i < x.length(); i++){
@@ -107,6 +114,14 @@ namespace mkmh{
 
     /* Returns the forward shingles size k of a sequence */
     vector<string> shingle(string seq, int k);
+    /** Returns an mkmh_minimizer struct, equivalent to a tuple(kmer, position, kmer length), for every position in the genome **/
+    vector<mkmh_minimizer> kmer_tuples(string seq, int k);
+    /** Finds the (w, k) minimizers of a string **/
+    vector<mkmh_minimizer> minimizers(string seq, int k, int w); 
+
+    /** Calculate a MinHash sketch for kmers length (2 * k) with skip bases in between the two k-length halves **/
+    vector<hash_t> allhash_64_linkmer(string seq, int k, int skip = 0);
+
 
     /* Returns the forward shingles of all k sizes of a sequence */
     vector<string> multi_shingle(string seq, vector<int> k);

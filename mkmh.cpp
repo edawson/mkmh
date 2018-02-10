@@ -245,7 +245,7 @@ namespace mkmh{
         return ret;
     }
 
-    /* Returns the forward and reverse-reverse complement kmers of a sequence */
+    /* Returns the forward kmers of a sequence */
     vector<string> kmerize(string seq, int k){
         vector<string> ret(seq.length() - k, "");
 
@@ -288,6 +288,54 @@ namespace mkmh{
         return ret;
     }
 
+    vector<mkmh_minimizer> kmer_tuples(string seq, int k){
+        vector<string> kmers = kmerize(seq, k);
+        vector<mkmh_minimizer> tups (kmers.size());
+        for (int i = 0; i < kmers.size(); i++){
+            mkmh_minimizer mm;
+            mm.seq = kmers[i];
+            mm.pos = i;
+            mm.length = k;
+            tups[i] = mm;
+        }
+
+        return tups;
+    }
+
+    vector<hash_t> allhash_64_linkmer(string seq, int k, int skip){
+        vector<hash_t> ret(seq.size() - (k*2));
+        int last_kmer_ind = seq.size() - (skip + (2 * k) );
+
+        #pragma omp parallel for
+        for (int i = 0; i <= last_kmer_ind; ++i){
+            char * linkmer = new char [k * 2];
+            for (int j = 0; j < k; ++j){
+                linkmer[j] = seq[i + j];
+                linkmer[k + j] = seq[i + skip + k + j];
+            }
+            hash_t c_hash = calc_hash(linkmer, 2*k);
+            ret[i] = c_hash;
+        }
+        
+        return ret;
+    }
+
+    vector<mkmh_minimizer> minimizers(string seq, int k, int w){
+        vector<mkmh_minimizer> ret;
+        vector<mkmh_minimizer> kmert = kmer_tuples(seq, k);
+        int i = 0;
+        for (i = 0; i + w < kmert.size(); ++i){
+            // get and sort kmers in window (i, i + w)
+            vector<mkmh_minimizer> window_kmers(kmert.begin() + i, kmert.begin() + i + w);
+            std::sort(window_kmers.begin(), window_kmers.end());
+            // TODO filter minimizers if needed, e.g. to remove poly-As
+            // create an mkmh_minimizer struct
+            // tuck miimizer in ret
+            ret.push_back(*(window_kmers.begin()));
+        }
+        return ret;
+    }
+
     vector<string> multi_shingle(string seq, vector<int> kSizes){
         int i = 0;
         vector<string> ret;
@@ -308,18 +356,24 @@ namespace mkmh{
 
     vector<hash_t> minhash_64_fast(string seq, vector<int> kmer, int hashSize, bool useBottom){
         vector<hash_t> ret;
-        ret.reserve(seq.length() * kmer.size());
+        //ret.reserve(seq.length() * kmer.size());
         for (auto k : kmer){
             vector<hash_t> tmp = calc_hashes(seq, k);
             ret.insert(ret.end(), tmp.begin(), tmp.end());
         }
         std::sort(ret.begin(), ret.end());
+        
+        int nonzero_ind = 0;
+        while (ret[nonzero_ind] == 0){
+            nonzero_ind++;
+        }
+        hashSize += nonzero_ind;
 
         int hashmax = hashSize < ret.size() ? hashSize : ret.size() - 1 ;
 
         return useBottom ?
-            vector<hash_t> (ret.begin(), ret.begin() + hashmax) :
-            vector<hash_t> (ret.rbegin(), ret.rbegin() + hashmax);
+            vector<hash_t> (ret.begin() + nonzero_ind, ret.begin() + hashmax) :
+            vector<hash_t> (ret.rbegin() + nonzero_ind, ret.rbegin() + hashmax);
     }
 
     vector<hash_t> calc_hashes(string seq, int k){
@@ -335,8 +389,8 @@ namespace mkmh{
         char* rev_rev_s = new char[k]; 
         reverse_reverse_complement(start, rev_rev_s, k);
         if (!canonical(rev_rev_s, k)){
-            //cerr << "Noncanonical bases found; exluding... " << rr_string << endl;
-            //continue;     
+            cerr << "Noncanonical bases found; exluding... " << rev_rev_s << endl;
+            return 0;
         }
  
         MurmurHash3_x64_128(start, seq.size(), 42, khash);
@@ -388,10 +442,7 @@ namespace mkmh{
 
             char* rev_rev_s = new char[k];
             reverse_reverse_complement(start, rev_rev_s, k);
-            if (!canonical(rev_rev_s, k)){
-                //cerr << "Noncanonical bases found; exluding... " << rr_string << endl;
-                continue;     
-            }
+            
             // need to handle reverse of char*
             MurmurHash3_x64_128(start, k, 42, khash);
             MurmurHash3_x64_128((const char*) rev_rev_s, k, 42, rev_rev_khash);
@@ -400,6 +451,12 @@ namespace mkmh{
             //hash_t tmp_rev = hash_t(rev_rev_khash[2]) << 32 | hash_t(rev_rev_khash[1]);
             hash_t tmp_rev = *((hash_t *) rev_rev_khash);
             hash_t tmp_for = *((hash_t *) khash);
+            if (!canonical(rev_rev_s, k)){
+                //cerr << "Noncanonical bases found; exluding... " << rev_rev_s << endl;
+                //continue;     
+                tmp_for = 0;
+                tmp_rev = 0;
+            }
 #pragma omp critical
             ret.push_back( tmp_for < tmp_rev ? tmp_for : tmp_rev );
             delete [] rev_rev_s;
@@ -461,20 +518,26 @@ namespace mkmh{
 
     vector<hash_t> minhash_64(string& seq, vector<int>& k, int hashSize, bool useBottom){
         vector<hash_t> ret;
-        ret.reserve(k.size() * seq.size());
+        //ret.reserve(k.size() * seq.size());
 
         for (auto km_sz : k){
             vector<hash_t> tmp = calc_hashes(seq, km_sz);
             ret.insert(ret.end(), tmp.begin(), tmp.end());
         }
         std::sort(ret.begin(), ret.end());
+        int nonzero_ind = 0;
+        while (ret[nonzero_ind] == 0){
+            nonzero_ind++;
+        }
 
-
+        hashSize += nonzero_ind;
         int hashmax = hashSize < ret.size() ? hashSize : ret.size() - 1 ;
 
+
+
         return useBottom ?
-            vector<hash_t> (ret.begin(), ret.begin() + hashmax) :
-            vector<hash_t> (ret.rbegin(), ret.rbegin() + hashmax);
+            vector<hash_t> (ret.begin() + nonzero_ind, ret.begin() + hashmax) :
+            vector<hash_t> (ret.rbegin() + nonzero_ind, ret.rbegin() + hashmax);
 
     }
 
@@ -597,6 +660,12 @@ namespace mkmh{
         ret.reserve(alpha.size());
         int i = 0;
         int j = 0;
+        while (alpha[i] == 0){
+            i++;
+        }
+        while(beta[j] == 0){
+            j++;
+        }
         while (i < alpha.size() && j < beta.size()){
             if (alpha[i] == beta[j]){
                 ret.push_back(alpha[i]);
