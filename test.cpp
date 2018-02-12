@@ -202,9 +202,9 @@ int main(){
         tripped = link_hashes[i] != base_kmers[i];        
     }
     testify(t_num++, "linked_hashes produces the correct hashes when skip = 0", !tripped);
-    link_hashes = allhash_64_linkmer(seq, 4, 2);
+    //link_hashes = allhash_64_linkmer(seq, 4, 2);
 
-    char tt[] = "ATGGTTCCCGGTTTTT";
+    //char tt[] = "ATGGTTCCCGGTTTTT";
     //kmerize(tt, 16, 4);
 
     return 0;
