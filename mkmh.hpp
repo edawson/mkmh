@@ -25,6 +25,13 @@ namespace mkmh{
         char** kmers;
         int length;
         int k;
+
+        ~mkmh_kmer_list_t(){
+            for (int i = 0; i < length; ++i){
+                delete [] kmers[i];
+            }
+            delete [] kmers;
+        }
     };
 
     struct mkmh_minimizer {
@@ -102,6 +109,9 @@ namespace mkmh{
 
     mkmh_kmer_list_t kmerize(char* seq, int seq_len, int k);
     
+    /* Print the kmers of a string, tab separated, to cout 
+    *   avoids allocating any new memory. */
+    void print_kmers(char* seq, int seq_len, int k);
 
     /* Returns the forward and reverse-reverse complement kmers for all kmer sizes in k */
     vector<string> multi_kmerize(string seq, vector<int> k);

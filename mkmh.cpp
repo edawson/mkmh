@@ -139,14 +139,33 @@ namespace mkmh{
         ret.kmers = new char*[seq_len - k];
         ret.k = k;
         ret.length = seq_len - k;
-        for (int i = 0; i + k < seq_len; i++){
-            char* km = new char[k];
+
+        for (int i = 0; i < ret.length; ++i){
+            char* km = new char[k + 1];
             memcpy(km, seq + i, k);
-            ret.kmers[i] = new char[k];
+            ret.kmers[i] = new char[k + 1];
             ret.kmers[i] = km;
+            ret.kmers[i][k] = '\0';
         }
         return ret;
     
+    }
+
+    void print_kmers(char* seq, int len, int k){
+        int kmerized_length = len - k;
+        for (int i = 0; i < kmerized_length - 1; ++i){
+            int j = 0;
+            while (j < k){
+                cout << seq[i + j];
+                ++j;
+            }
+            cout << "\t";
+        }
+        int j = 0;
+        while(j < k){
+            cout << seq[kmerized_length - 1 + j];
+            ++j;
+        }
     }
 
     vector<string> multi_kmerize(string seq, vector<int> kSizes){
@@ -271,6 +290,30 @@ namespace mkmh{
         const char* x = seq.c_str();
         return calc_hashes(x, int(seq.length()), k);
     }
+
+    // void calc_hashes_fast(const char* seq, const int& len, hash_t** ret, int& ret_len){
+
+    // }
+
+    // A faster calc_hash that saves a A TON of allocs / frees.
+    // void calc_hash_fast(const char* seq, const int& len,
+    //  char* forward_hash, char* reverse_hash,
+    //  hash_t& final_hash){
+    //     char[len] rev_str;
+    //     reverse_complement(seq, rev_str, len);
+    //     if (canonical(rev_rev_s, k)){
+    //         MurmurHash3_x64_128((const char*) seq, len, 42, forward_hash);
+    //         MurmurHash3_x64_128((const char*)rev_str, len, 42, reverse_hash);
+    //         hash_t tmp_for = *((hash_t*)) forward_hash;
+    //         hash_t tmp_rev = *((hash_t*)) reverse_hash;
+    //         final_hash = (tmp_for < tmp_rev ? tmp_for : tmp_rev);
+    //     }
+    //     else{
+    //         cerr << "Noncanonical bases found; exluding... " << rev_rev_s << endl;
+    //         forward_hash = 0;
+    //         reverse_hash = 0;
+    //     }
+    // }
 
     hash_t calc_hash(string seq){
         int k = seq.length();
