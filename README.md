@@ -1,5 +1,5 @@
 # mkmh
-Generate and compare MinHash signatures with multiple kmer sizes.
+Make kmers, minimizers, hashes, and MinHash sketches (with multiple k), and compare them. 
 
 ## Usage
 To use mkmh functions in your code:  
@@ -12,22 +12,13 @@ To use mkmh functions in your code:
 4. That's it!
 
 ## Available functions
-The functions in the package produce vectors of hashes that are:  
-1. Sorted  
-2. Guaranteed 64 bits  
-3. Bottom or Top hashes (i.e. the largest N hashes or smallest N hashes)  
-4. From either kmers of size K or of all sizes [K<sub>1</sub> ... K<sub>m</sub>] provided.  
+Convenience funtions:
 
+Get the shingles / kmers / minimizers / hashes of a string:
 
-There are helper functions for ``top_minhash_64 `` and ``bottom_minhash_64``
-as well as two `minhash_64` functions, one which takes a single kmer size and one which takes
-a list of kmer sizes.
+Compare sets of shingles / kmers / minimizers / hashes:
 
-
-I tried to only use vectors in this library so there are functions for performing set operations on vectors.
-This probably kills performance, but none of this has been tuned anyway so it's probably not
-close to maximum efficiency.
-
+Fun extras:
 
 ## Getting help
 Please reach out through [github](https://github.com/edawson/mkmh) to post an issue,
