@@ -151,7 +151,7 @@ namespace mkmh{
     
     }
 
-    void print_kmers(char* seq, int len, int k){
+    void print_kmers(char* seq, const int& len, int k){
         int kmerized_length = len - k;
         for (int i = 0; i < kmerized_length - 1; ++i){
             int j = 0;
@@ -229,6 +229,7 @@ namespace mkmh{
         
         return ret;
     }
+
 
     vector<mkmh_minimizer> minimizers(string seq, int k, int w){
         vector<mkmh_minimizer> ret;

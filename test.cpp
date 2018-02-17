@@ -184,14 +184,14 @@ int main(){
     std::tuple<hash_t*, int> inter = hash_intersection(fast_comp1, 0, 4, fast_comp2, 0, 4, 4);
     testify(t_num++, "new fast hash intersection produces the right number of values.", std::get<1>(inter) == 2);
 
-    vector<mkmh_minimizer> mh = minimizers("ACTGCCCCTGGGGGGCTTTTCGCGCTTTGCTGTATATAAAAAAAGTCGGAAAAAAAAAAAAAAAAAATGCTA", 6, 7);
-    testify(t_num++, "minimizers produces the right number of minimizers", mh.size() == 66);
-    cerr << "sz: " << mh.size() << endl;
-    for (auto z : mh){
-        cout << z.pos << " " << " " << z.length << " " << z.seq << endl;
-    }
+    vector<mkmh_minimizer> mh = minimizers("ACTGGTTCCCCAAAATTTTTTGATAGTAGGATACCGACGC", 5, 10);
+    testify(t_num++, "minimizers produces the right number of minimizers", mh.size() == 25);
+    //cerr << "sz: " << mh.size() << endl;
+    //for (auto z : mh){
+        //cout << z.pos << " " << " " << z.length << " " << z.seq << endl;
+    //}
 
-    cerr << seq << endl;
+    //cerr << seq << endl;
     vector<hash_t> link_hashes = allhash_64_linkmer(seq, 3, 0);
     vector<int> s;
     s.push_back(6);
@@ -202,6 +202,11 @@ int main(){
         tripped = link_hashes[i] != base_kmers[i];        
     }
     testify(t_num++, "linked_hashes produces the correct hashes when skip = 0", !tripped);
+    //char* eightseq = {'A', 'C', 'T', 'G', 'A', 'A', 'G', 'T', '\0'};
+    char eightseq [8] = {"ACTGAAG"};
+    print_kmers(eightseq, 7, 4);
+    cout << endl;
+    
     //link_hashes = allhash_64_linkmer(seq, 4, 2);
 
     //char tt[] = "ATGGTTCCCGGTTTTT";

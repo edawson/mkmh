@@ -107,11 +107,13 @@ namespace mkmh{
     /* Returns the forward and reverse-reverse complement kmers of a sequence */
     vector<string> kmerize(string seq, int k);
 
+    //void kmerize(char* seq, int seq_len, const int& k, char* kmers, int& kmer_num);
+
     mkmh_kmer_list_t kmerize(char* seq, int seq_len, int k);
     
     /* Print the kmers of a string, tab separated, to cout 
     *   avoids allocating any new memory. */
-    void print_kmers(char* seq, int seq_len, int k);
+    void print_kmers(char* seq, const int& seq_len, int k);
 
     /* Returns the forward and reverse-reverse complement kmers for all kmer sizes in k */
     vector<string> multi_kmerize(string seq, vector<int> k);
