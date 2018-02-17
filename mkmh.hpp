@@ -12,6 +12,7 @@
 #include <iostream>
 #include <algorithm>
 #include <omp.h>
+#include <assert.h>
 #include "murmur3.hpp"
 
 
@@ -40,6 +41,43 @@ namespace mkmh{
         bool operator<(const mkmh_minimizer& rhs) const {return seq < rhs.seq;};
     };
 
+    // Crazy hack char table to test for canonical bases
+    static int valid_dna[127] = {
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 0, 1, 0, 1, 1, 1,
+        0, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 0, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 0, 1, 0, 1,
+        1, 1, 0, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 0, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1
+    };
+
+    // Reverse complement lookup table
+    static char rev_arr [26] = {
+        84, 66, 71, 68, 69,
+        70, 67, 72, 73, 74,
+        75, 76, 77, 78, 79,
+        80, 81, 82, 83, 65,
+        85, 86, 87, 88, 89, 90
+    };
+
+    
+    // Check a string (as a char*) for non-canonical DNA bases
+    inline bool canonical(const char* x, int len){
+       bool ret = true;
+       int trip = 0;
+        for (int i = 0; i < len; ++i){
+            trip |= valid_dna[x[i]];   
+       }
+        return trip;
+    };
+
     inline bool canonical(string x){
         bool allATGC = true;
         for (int i = 0; i < x.length(); i++){
@@ -63,49 +101,67 @@ namespace mkmh{
         return allATGC;
     };
 
-    inline bool canonical(const char* x, int len){
-        bool allATGC = true;
-        for (int i = 0; i < len; ++i){
-            char c = x[i];
-            switch (c){
-                case 'A':
-                case 'a':
-                case 'T':
-                case 't':
-                case 'C':
-                case 'c':
-                case 'G':
-                case 'g':
-                    continue;
-                    break;
-                default:
-                    allATGC = false;
-                    break;
-            }
+    /* Reverse complement the string seq
+    * (assumes seq is DNA, and returns non-ACTG letters as-is*/
+
+    /* Reverse complement a C string */
+    inline void reverse_complement(const char* seq, char* ret, int len){
+        for (int i = len - 1; i >=0; i--){
+            ret[ len - 1 - i ] = (char) rev_arr[ (int) seq[i] - 65];
         }
-        return allATGC;
     };
 
-    /* Reverse the string seq */
+    /* Reverse complement a string */
+    inline string reverse_complement(string& seq){
+        const char* s = seq.c_str();
+        int seqlen = seq.length();
+        char* ret = new char[seqlen];
+        reverse_complement(s, ret, seqlen);
+        string s_revc(ret);
+
+        return s_revc;
+    };
+
+    /* Capitalize all characters in a string */
+    /* Capitalize a C string */
+    inline void to_upper(char* seq, int length){
+        for (int i = 0; i < length; i++){
+            char c = seq[i];
+            seq[i] = ( (c - 91) > 0 ? c - 32 : c);
+        }
+    };
+
+    /* Capitalize a string */
+    inline string to_upper(string& seq){
+        for (int i = 0; i < seq.length(); i++){
+            char c = seq[i];
+            seq[i] =  ((c - 91) > 0 ? c - 32 : c);
+        }
+        return seq;
+    };
+
+    /* Reverse a string */
     inline string reverse(string seq){
         string copy = string(seq);
         std::reverse(copy.begin(), copy.end());
         return copy;
-    }
+    };
 
-    /* Reverse complement the string seq (assumes seq is DNA, and returns non-ACTG letters as-is*/
-    string reverse_complement(string& seq);
-    
-    void reverse_complement(const char* seq, char* ret, int len);
+    /* Reverse a C string*/
+    inline void reverse(char* seq, const int& len){
+        char tmp;
+        for (int i = 0; i < len; ++i){
+            tmp = seq[len - i];
+            seq[ len - i ] = seq[i];
+            seq[i] = tmp;
+        }
+    };
 
-    /* Capitalize all characters in a string */
-    string to_upper(string seq);
-    
-    void to_upper(char* seq, int length);
+
+
 
     /* Returns the forward and reverse-reverse complement kmers of a sequence */
     vector<string> kmerize(string seq, int k);
-
 
     mkmh_kmer_list_t kmerize(char* seq, int seq_len, int k);
     
@@ -227,9 +283,24 @@ namespace mkmh{
     /* Calculate the 64-bit hash for a string defined by seq and the length of seq */
     hash_t calc_hash(char* seq, int seqlen);
 
+    inline void calc_hash(const char* seq, const int& len,
+        char* reverse,
+        hash_t* forhash, hash_t* revhash,
+        hash_t* fin_hash){
 
-    //TODO void calc_hash(char* seq, int& len, hash_t* h);
-    //
+        
+        if (canonical(seq, len)){
+            reverse_complement(seq, reverse, len);
+            MurmurHash3_x64_128(seq, len, 42, forhash);
+            MurmurHash3_x64_128(reverse, len, 42, revhash);
+            *fin_hash = *forhash < *revhash ? *forhash : *revhash;
+        }
+        else{
+            *forhash = 0;
+            *revhash = 0;
+            *fin_hash = 0;
+        }
+    };
 
     /* Calculate all the hashes of the kmers length k of seq */
     vector<hash_t> calc_hashes(string seq, int k);
@@ -237,7 +308,51 @@ namespace mkmh{
     /* Calculate all the hashes of the kmers length k of seq */
     vector<hash_t> calc_hashes(const char* seq, int seq_length, int k);
 
+    /** Calculate the hashes of the kmers length k of seq **/
+    void calc_hashes(const char* seq, const int& len,
+            const int& k, hash_t* hashes, int& numhashes);
 
+    /** Calculate the hashes for kmers of multiple lengths in <kmer>
+     */
+    inline void calc_hashes(const char* seq, const int& len,
+                vector<int>& kmer, hash_t* hashes, int& num_hashes){
+        
+        assert(num_hashes == 0);
+        hash_t* tmp;
+        for (int i = 0; i < kmer.size(); ++i){
+            int k = kmer[i];
+            hash_t* khashes = new hash_t[len - k];
+            int n = len - k;
+            calc_hashes(seq, len, k, khashes, n);
+            tmp = new hash_t[num_hashes + n];
+            copy(hashes, hashes + num_hashes, tmp);
+            copy(khashes, khashes + n, tmp + num_hashes);
+            delete [] hashes;
+            delete [] khashes;
+            hashes = tmp;
+            num_hashes += n;
+        }
+    };
+
+    inline void calc_hashes(const char* seq, const int& len,
+            const int& k, hash_t* hashes, int& numhashes){
+        char* reverse = new char[k];
+        hash_t* rhash = new hash_t[k];
+        numhashes = len - k;
+        hashes = new hash_t[numhashes];
+        if (canonical(seq, len)){
+            for (int i = 0; i < numhashes; ++i){
+                reverse_complement(seq + i, reverse, k);
+                MurmurHash3_x64_128(seq + i, k, 42, hashes + i);
+                MurmurHash3_x64_128(reverse, k, 42, rhash);
+                *(hashes + i) = *(hashes + i) < *(rhash) ? *(hashes + i) : *(rhash);
+            }
+        }
+        delete reverse;
+        delete rhash;
+    };
+
+   
 }
 
 #endif

@@ -5,48 +5,6 @@ namespace mkmh{
 
     using namespace std;
 
-    char rev_arr [26] = {84, 66, 71, 68, 69, 70, 67, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 65,
-                       85, 86, 87, 88, 89, 90};
-     /*
-     * char[26] up_arr = {};
-     */
-
-    
-    void reverse_complement(const char* seq, char* ret, int len){
-        for (int i = len - 1; i >=0; i--){
-            ret[ len - 1 - i ] = (char) rev_arr[ (int) seq[i] - 65];
-        }
-    }
-
-    string reverse_complement(string& seq){
-        const char* s = seq.c_str();
-        int seqlen = seq.length();
-        char* ret = new char[seqlen];
-        reverse_complement(s, ret, seqlen);
-        string s_revc(ret);
-
-        return s_revc;
-
-    }
-
-    void to_upper(char* seq, int length){
-        
-        for (int i = 0; i < length; i++){
-            char c = seq[i];
-            seq[i] = ( (c - 91) > 0 ? c - 32 : c);
-        }
-    }
-
-    string to_upper(string& seq){
-        char* ret_container = new char[seq.length()];
-
-        for (int i = 0; i < seq.length(); i++){
-            char c = seq[i];
-            seq[i] =  ((c - 91) > 0 ? c - 32 : c);
-        }
-        return seq;
-    }
-
     vector<string> kmer_set(vector<string> kmers){
         set<string> uniqs = set<string> (kmers.begin(), kmers.end());
         vector<string> ret = vector<string> (uniqs.begin(), uniqs.end());
@@ -85,8 +43,6 @@ namespace mkmh{
 
             }
         }
-
-
         return conv;
     }
 
@@ -97,7 +53,7 @@ namespace mkmh{
         //priority_queue<string> ret(base.begin(), base.end());
         for (auto k : kmer){
             vector<string> outmers(seq.length() - k, "");
-#pragma omp parallel for
+            #pragma omp parallel for
             for (int i = 0; i < seq.length() - k; i++){
                 string forward = seq.substr(i, k);
                 string revrev = reverse(reverse_complement(forward));
@@ -142,7 +98,6 @@ namespace mkmh{
             ret.kmers[i][k] = '\0';
         }
         return ret;
-    
     }
 
     void kmerize(char* seq, const int& seq_len, const int& k, char** kmers, int& kmer_num){
@@ -190,7 +145,7 @@ namespace mkmh{
         return ret;
     }
 
-    /* Returns the forward shingles size k of a sequence */
+    /* Returns only the forward shingles size k of a sequence */
     vector<string> shingle(string seq, int k){
         int i = 0;
         vector<string> ret;
@@ -267,6 +222,7 @@ namespace mkmh{
         return ret;
     }
 
+    
     vector<string> multi_shingle(string seq, vector<int> kSizes){
         int i = 0;
         vector<string> ret;
@@ -311,56 +267,7 @@ namespace mkmh{
         const char* x = seq.c_str();
         return calc_hashes(x, int(seq.length()), k);
     }
-
-    // void calc_hashes_fast(const char* seq, const int& len, hash_t** ret, int& ret_len){
-
-    // }
-
-    // A faster calc_hash that saves a A TON of allocs / frees.
-    // void calc_hash_fast(const char* seq, const int& len,
-    //  char* forward_hash, char* reverse_hash,
-    //  hash_t& final_hash){
-    //     char[len] rev_str;
-    //     reverse_complement(seq, rev_str, len);
-    //     if (canonical(rev_rev_s, k)){
-    //         MurmurHash3_x64_128((const char*) seq, len, 42, forward_hash);
-    //         MurmurHash3_x64_128((const char*)rev_str, len, 42, reverse_hash);
-    //         hash_t tmp_for = *((hash_t*)) forward_hash;
-    //         hash_t tmp_rev = *((hash_t*)) reverse_hash;
-    //         final_hash = (tmp_for < tmp_rev ? tmp_for : tmp_rev);
-    //     }
-    //     else{
-    //         cerr << "Noncanonical bases found; exluding... " << rev_rev_s << endl;
-    //         forward_hash = 0;
-    //         reverse_hash = 0;
-    //     }
-    // }
-    //
-
-    void calc_hashes(){
-
-    }
-    void calc_hashes(const char* seq, const int& len,
-            const int& k, hash_t* hashes, int& numhashes){
-
-    }
-    void calc_hash(const char* seq, const int& len,
-        char* reverse,
-        hash_t* forhash, hash_t* revhash,
-        hash_t* fin_hash){
-        
-        reverse_complement(seq, reverse, len);
-        if (canonical(reverse, k)){
-            MurmurHash3_x64_128(seq, len, 42, forhash);
-            MurmurHash3_x64_128(reverse, len, 42, revhash);
-            *fin_hash = *forhash < *revhash ? *forhash : *rev_hash;
-        }
-        else{
-            *forhash = 0;
-            *revhash = 0;
-            *fin_hash = 0;
-        }
-    }
+ 
 
     hash_t calc_hash(string seq){
         int k = seq.length();
