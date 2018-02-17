@@ -29,12 +29,6 @@ namespace mkmh{
 
     }
 
-    // string reverse(string& seq){
-    //     string copy = string(seq);
-    //     std::reverse(copy.begin(), copy.end());
-    //     return copy;
-    // }
-
     void to_upper(char* seq, int length){
         
         for (int i = 0; i < length; i++){
@@ -123,7 +117,7 @@ namespace mkmh{
     vector<string> kmerize(string seq, int k){
         vector<string> ret(seq.length() - k, "");
 
-#pragma omp parallel for
+        #pragma omp parallel for
         for (int i = 0; i < seq.length() - k; i++){
             string s = seq.substr(i, k);
             //#pragma omp atomic read
@@ -149,6 +143,15 @@ namespace mkmh{
         }
         return ret;
     
+    }
+
+    void kmerize(char* seq, const int& seq_len, const int& k, char** kmers, int& kmer_num){
+        char** ret = new char*[seq_len - k];
+        kmer_num = seq_len - k;
+        for (int i = 0; i < kmer_num; ++i){
+            ret[i] = new char[ k + 1 ];
+            memcpy(ret[i], seq + i, k);
+        }
     }
 
     void print_kmers(char* seq, const int& len, int k){
@@ -230,8 +233,25 @@ namespace mkmh{
         return ret;
     }
 
-
     vector<mkmh_minimizer> minimizers(string seq, int k, int w){
+        vector<mkmh_minimizer> ret;
+        vector<mkmh_minimizer> kmert = kmer_tuples(seq, k);
+        int i = 0;
+        for (i = 0; i + w < kmert.size(); ++i){
+            // get and sort kmers in window (i, i + w)
+            vector<mkmh_minimizer> window_kmers(kmert.begin() + i, kmert.begin() + i + w);
+            std::sort(window_kmers.begin(), window_kmers.end());
+            // TODO filter minimizers if needed, e.g. to remove poly-As
+            // create an mkmh_minimizer struct
+            // tuck minimizer in ret
+            ret.push_back(*(window_kmers.begin()));
+        }
+        return v_set(ret);
+    }
+
+
+
+    vector<mkmh_minimizer> unreduced_minimizers(string seq, int k, int w){
         vector<mkmh_minimizer> ret;
         vector<mkmh_minimizer> kmert = kmer_tuples(seq, k);
         int i = 0;
@@ -315,6 +335,32 @@ namespace mkmh{
     //         reverse_hash = 0;
     //     }
     // }
+    //
+
+    void calc_hashes(){
+
+    }
+    void calc_hashes(const char* seq, const int& len,
+            const int& k, hash_t* hashes, int& numhashes){
+
+    }
+    void calc_hash(const char* seq, const int& len,
+        char* reverse,
+        hash_t* forhash, hash_t* revhash,
+        hash_t* fin_hash){
+        
+        reverse_complement(seq, reverse, len);
+        if (canonical(reverse, k)){
+            MurmurHash3_x64_128(seq, len, 42, forhash);
+            MurmurHash3_x64_128(reverse, len, 42, revhash);
+            *fin_hash = *forhash < *revhash ? *forhash : *rev_hash;
+        }
+        else{
+            *forhash = 0;
+            *revhash = 0;
+            *fin_hash = 0;
+        }
+    }
 
     hash_t calc_hash(string seq){
         int k = seq.length();
@@ -404,14 +450,14 @@ namespace mkmh{
         vector<hash_t> ret;
         ret.reserve(strlen(seq) * kmer.size());
         for (auto k : kmer){
-            cerr << "K: " << k << endl;
+            //cerr << "K: " << k << endl;
             vector<hash_t> tmp = calc_hashes(seq, k);
 
-            cerr << tmp.size() << endl;
+            //cerr << tmp.size() << endl;
             ret.insert(ret.end(), tmp.begin(), tmp.end());
         }
 
-        cerr << "ret.size(): " << ret.size() << endl;;
+    //cerr << "ret.size(): " << ret.size() << endl;;
 
         return ret;
     }
