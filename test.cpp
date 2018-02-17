@@ -185,7 +185,7 @@ int main(){
     testify(t_num++, "new fast hash intersection produces the right number of values.", std::get<1>(inter) == 2);
 
     vector<mkmh_minimizer> mh = minimizers("ACTGGTTCCCCAAAATTTTTTGATAGTAGGATACCGACGC", 5, 10);
-    testify(t_num++, "minimizers produces the right number of minimizers", mh.size() == 25);
+    testify(t_num++, "minimizers produces the right number of minimizers", mh.size() == 9);
     //cerr << "sz: " << mh.size() << endl;
     //for (auto z : mh){
         //cout << z.pos << " " << " " << z.length << " " << z.seq << endl;
