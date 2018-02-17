@@ -1,3 +1,6 @@
 [submodule "murmur3"]
     url = https://github.com/edawson/murmur3.git
     path = murmur3
+[submodule "Catch2"]
+	path = Catch2
+	url = https://github.com/catchorg/Catch2.git
