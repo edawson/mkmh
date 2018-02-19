@@ -74,7 +74,11 @@ namespace mkmh{
     inline bool canonical(const char* x, int len){
        bool trip = false;
         for (int i = 0; i < len; ++i){
-            cout << x[i] << " " << (int) x[i] << " " << valid_dna[ (int) x[i] ] << endl;
+            // #ifdef DEBUG
+            // {
+            //cout << x[i] << " " << (int) x[i] << " " << valid_dna[ (int) x[i] ] << endl;
+            //}
+            //#endif
             trip |= valid_dna[x[i]];   
        }
         return !trip;
