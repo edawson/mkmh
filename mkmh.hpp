@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <iostream>
 #include <algorithm>
+#include <assert.h>
 #include <omp.h>
 #include <assert.h>
 #include "murmur3.hpp"
@@ -42,20 +43,21 @@ namespace mkmh{
     };
 
     // Crazy hack char table to test for canonical bases
-    static int valid_dna[127] = {
-        1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-        1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-        1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-        1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-        1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-        1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-        1, 1, 1, 1, 0, 1, 0, 1, 1, 1,
-        0, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-        1, 1, 1, 0, 1, 1, 1, 1, 1, 1,
-        1, 1, 1, 1, 1, 1, 0, 1, 0, 1,
-        1, 1, 0, 1, 1, 1, 1, 1, 1, 1,
-        1, 1, 1, 1, 1, 0, 1, 1, 1, 1,
-        1, 1, 1, 1, 1, 1, 1
+    static const int valid_dna[127] = {
+    1,
+    1,1,1,1,1,1,1,1,1,1,
+    1,1,1,1,1,1,1,1,1,1,
+    1,1,1,1,1,1,1,1,1,1,
+    1,1,1,1,1,1,1,1,1,1,
+    1,1,1,1,1,1,1,1,1,1,
+    1,1,1,1,1,1,1,1,1,1,
+    1,1,1,1,0,1,0,1,1,1,
+    0,1,1,1,1,1,1,1,1,1,
+    1,1,1,0,1,1,1,1,1,1,
+    1,1,1,1,1,1,0,1,0,1,
+    1,1,0,1,1,1,1,1,1,1,
+    1,1,1,1,1,0,1,1,1,1,
+    1,1,1,1,1,1 
     };
 
     // Reverse complement lookup table
@@ -70,12 +72,12 @@ namespace mkmh{
     
     // Check a string (as a char*) for non-canonical DNA bases
     inline bool canonical(const char* x, int len){
-       bool ret = true;
-       int trip = 0;
+       bool trip = false;
         for (int i = 0; i < len; ++i){
+            cout << x[i] << " " << (int) x[i] << " " << valid_dna[ (int) x[i] ] << endl;
             trip |= valid_dna[x[i]];   
        }
-        return trip;
+        return !trip;
     };
 
     inline bool canonical(string x){
@@ -106,6 +108,7 @@ namespace mkmh{
 
     /* Reverse complement a C string */
     inline void reverse_complement(const char* seq, char* ret, int len){
+        assert(seq != ret);
         for (int i = len - 1; i >=0; i--){
             ret[ len - 1 - i ] = (char) rev_arr[ (int) seq[i] - 65];
         }
