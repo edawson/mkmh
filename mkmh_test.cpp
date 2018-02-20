@@ -31,8 +31,12 @@ TEST_CASE("Canonical function catches non-valid chars", "[canonical]"){
     char k [27] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     REQUIRE(canonical(k, 26) == false);
 
-    //char o [8] = "ACCCCTG";
-    //REQUIRE(canonical(o, 7) == true);
+    char o [8] = "ACCCCTG";
+    REQUIRE(canonical(o, 7) == true);
+
+
+    char low[8] = "acccctg";
+    REQUIRE(canonical(low, 7) == true);
 }
 
 TEST_CASE("Upper works for strings and chars"){
