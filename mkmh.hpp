@@ -386,16 +386,18 @@ namespace mkmh{
 
     inline void calc_hashes(const char* seq, const int& len,
             const int& k, hash_t* hashes, int& numhashes){
-        char* reverse = new char[k];
-        hash_t* rhash;
+        char* reverse = new char[k + 1];
+        //hash_t* rhash;
+        char rhash[16];
+        char fhash[16];
         numhashes = len - k;
         hashes = new hash_t[numhashes];
             for (int i = 0; i < numhashes; ++i){
                 if (canonical(seq + i, k)){
                     reverse_complement(seq + i, reverse, k);
-                    MurmurHash3_x64_128(seq + i, k, 42, hashes + i);
+                    MurmurHash3_x64_128(seq + i, k, 42, fhash);
                     MurmurHash3_x64_128(reverse, k, 42, rhash);
-                    *(hashes + i) = *(hashes + i) < *(rhash) ? *(hashes + i) : *(rhash);
+                    *(hashes + i) = *(fhash) < *(rhash) ? *(fhash) : *(rhash);
                 }
                 else{
                     *(hashes + i) = 0;
@@ -403,7 +405,6 @@ namespace mkmh{
 
             }
         delete reverse;
-        delete rhash;
     };
 
    
