@@ -11,41 +11,6 @@ namespace mkmh{
         return ret;
     }
 
-    hash_t kmer_to_integer(string kmer){
-        //00 - 'G', 01 - 'A', 10 - 'T', and 11 - 'C'
-        int8_t ret[8];
-        hash_t conv;
-        int count = 0;
-        for (int i = 0; i < kmer.length(); i++){
-            char c = kmer[i];
-            switch(c){
-                //01
-                case 'A':
-                case 'a':
-                    //                conv ^= (-x ^ conv) & (1 << n);
-                    //                num << 1;
-                    break;
-                case 'T':
-                case 't':
-                    //                num << 2;
-                    break;
-                case 'C':
-                case 'c':
-                    //                num << 3;
-                    break;
-                case 'G':
-                case 'g':
-                    //                num << 4;
-                    break;
-                default:
-                    //                num << 5;
-                    break;
-
-            }
-        }
-        return conv;
-    }
-
     priority_queue<string> kmer_heap(string seq, vector<int> kmer){
 
         vector<string> base;
@@ -263,109 +228,16 @@ namespace mkmh{
             vector<hash_t> (ret.rbegin() + nonzero_ind, ret.rbegin() + hashmax);
     }
 
-    vector<hash_t> calc_hashes(string seq, int k){
-        const char* x = seq.c_str();
-        return calc_hashes(x, int(seq.length()), k);
-    }
- 
 
-    hash_t calc_hash(string seq){
-        int k = seq.length();
-        char khash[16];
-        char rev_rev_khash[16];
-        const char* start = seq.c_str();
-        char* rev_rev_s = new char[k]; 
-        reverse_complement(start, rev_rev_s, k);
-        if (!canonical(rev_rev_s, k)){
-            cerr << "Noncanonical bases found; exluding... " << rev_rev_s << endl;
-            return 0;
-        }
- 
-        MurmurHash3_x64_128(start, seq.size(), 42, khash);
-        MurmurHash3_x64_128((const char*)rev_rev_s, seq.size(), 42, rev_rev_khash);
 
-        delete [] rev_rev_s;
-
-            //hash_t tmp_for = hash_t(khash[2]) << 32 | hash_t(khash[1]);
-            //hash_t tmp_rev = hash_t(rev_rev_khash[2]) << 32 | hash_t(rev_rev_khash[1]);
-        hash_t tmp_rev = *((hash_t *) rev_rev_khash);
-        hash_t tmp_for = *((hash_t *) khash);
-        return ( tmp_for < tmp_rev ? tmp_for : tmp_rev );
-
-    }
-
-    hash_t calc_hash(char* seq, int seqlen){
-        char khash[16];
-        char rev_rev_khash[16];
-        const char* start = seq;
-        char* rev_rev_s = new char[seqlen];
-        reverse_complement(start, rev_rev_s, seqlen);
-        if (!canonical(rev_rev_s, seqlen)){
-            cerr << "Noncanonical bases found; exluding... " << rev_rev_s << endl;
-            return 0;     
-        }
-            // need to handle reverse of char*
-        MurmurHash3_x64_128(start, seqlen, 42, khash);
-        MurmurHash3_x64_128( (const char*) rev_rev_s, seqlen, 42, rev_rev_khash);
-
-        delete [] rev_rev_s;
-
-            //hash_t tmp_for = hash_t(khash[2]) << 32 | hash_t(khash[1]);
-            //hash_t tmp_rev = hash_t(rev_rev_khash[2]) << 32 | hash_t(rev_rev_khash[1]);
-        hash_t tmp_rev = *((hash_t *) rev_rev_khash);
-        hash_t tmp_for = *((hash_t *) khash);
-        return ( tmp_for < tmp_rev ? tmp_for : tmp_rev );
-
-       
-    }
-
-    vector<hash_t> calc_hashes(const char* x, int seq_length, int k){
-        vector<hash_t> ret;
-        ret.reserve(seq_length - k);
-        //#pragma omp parallel for
-        for (int i = 0; i < seq_length - k; i++){
-            char khash[16];
-            char rev_rev_khash[16];
-            const char* start = x + i;
-
-            char* rev_rev_s = new char[k];
-            reverse_complement(start, rev_rev_s, k);
-            
-            // need to handle reverse of char*
-            MurmurHash3_x64_128(start, k, 42, khash);
-            MurmurHash3_x64_128((const char*) rev_rev_s, k, 42, rev_rev_khash);
-
-            //hash_t tmp_for = hash_t(khash[2]) << 32 | hash_t(khash[1]);
-            //hash_t tmp_rev = hash_t(rev_rev_khash[2]) << 32 | hash_t(rev_rev_khash[1]);
-            hash_t tmp_rev = *((hash_t *) rev_rev_khash);
-            hash_t tmp_for = *((hash_t *) khash);
-            if (!canonical(rev_rev_s, k)){
-                //cerr << "Noncanonical bases found; exluding... " << rev_rev_s << endl;
-                //continue;     
-                tmp_for = 0;
-                tmp_rev = 0;
-            }
-#pragma omp critical
-            ret.push_back( tmp_for < tmp_rev ? tmp_for : tmp_rev );
-            delete [] rev_rev_s;
-        }
-       
-        return ret;
-    }
 
     vector<hash_t> allhash_unsorted_64_fast(const char* seq, vector<int>& kmer){
         vector<hash_t> ret;
         ret.reserve(strlen(seq) * kmer.size());
         for (auto k : kmer){
-            //cerr << "K: " << k << endl;
             vector<hash_t> tmp = calc_hashes(seq, k);
-
-            //cerr << tmp.size() << endl;
             ret.insert(ret.end(), tmp.begin(), tmp.end());
         }
-
-    //cerr << "ret.size(): " << ret.size() << endl;;
-
         return ret;
     }
 
