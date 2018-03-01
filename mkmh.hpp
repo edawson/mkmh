@@ -387,11 +387,10 @@ namespace mkmh{
     inline void calc_hashes(const char* seq, const int& len,
             const int& k, hash_t* hashes, int& numhashes){
         char* reverse = new char[k];
-        hash_t* rhash = new hash_t[k];
+        hash_t* rhash;
         numhashes = len - k;
         hashes = new hash_t[numhashes];
             for (int i = 0; i < numhashes; ++i){
-
                 if (canonical(seq + i, k)){
                     reverse_complement(seq + i, reverse, k);
                     MurmurHash3_x64_128(seq + i, k, 42, hashes + i);
