@@ -390,14 +390,19 @@ namespace mkmh{
         hash_t* rhash = new hash_t[k];
         numhashes = len - k;
         hashes = new hash_t[numhashes];
-        if (canonical(seq, len)){
             for (int i = 0; i < numhashes; ++i){
-                reverse_complement(seq + i, reverse, k);
-                MurmurHash3_x64_128(seq + i, k, 42, hashes + i);
-                MurmurHash3_x64_128(reverse, k, 42, rhash);
-                *(hashes + i) = *(hashes + i) < *(rhash) ? *(hashes + i) : *(rhash);
+
+                if (canonical(seq + i, k)){
+                    reverse_complement(seq + i, reverse, k);
+                    MurmurHash3_x64_128(seq + i, k, 42, hashes + i);
+                    MurmurHash3_x64_128(reverse, k, 42, rhash);
+                    *(hashes + i) = *(hashes + i) < *(rhash) ? *(hashes + i) : *(rhash);
+                }
+                else{
+                    *(hashes + i) = 0;
+                }
+
             }
-        }
         delete reverse;
         delete rhash;
     };
