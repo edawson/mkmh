@@ -16,6 +16,7 @@
 #include <assert.h>
 #include "murmur3.hpp"
 
+#define DBGG
 
 namespace mkmh{
     using namespace std;
@@ -262,39 +263,7 @@ namespace mkmh{
     /** Return the intersection of two lists of kmers **/
     vector<string> kmer_intersection(vector<string> alpha, vector<string> beta);
     
-   
-
-    /* Calculate the 64-bit hash for a string defined by seq and the length of seq */
-    inline hash_t calc_hash(const char* seq, int seqlen){
-        char khash[16];
-        char rev_rev_khash[16];
-        const char* start = seq;
-        char* rev_rev_s = new char[seqlen];
-        reverse_complement(start, rev_rev_s, seqlen);
-        if (!canonical(rev_rev_s, seqlen)){
-            cerr << "Noncanonical bases found; exluding... " << rev_rev_s << endl;
-            return 0;     
-        }
-            // need to handle reverse of char*
-        MurmurHash3_x64_128(start, seqlen, 42, khash);
-        MurmurHash3_x64_128( (const char*) rev_rev_s, seqlen, 42, rev_rev_khash);
-
-        delete [] rev_rev_s;
-
-            //hash_t tmp_for = hash_t(khash[2]) << 32 | hash_t(khash[1]);
-            //hash_t tmp_rev = hash_t(rev_rev_khash[2]) << 32 | hash_t(rev_rev_khash[1]);
-        hash_t tmp_rev = *((hash_t *) rev_rev_khash);
-        hash_t tmp_for = *((hash_t *) khash);
-        return ( tmp_for < tmp_rev ? tmp_for : tmp_rev );
-    }
-
-     /* Calculate the hash for a string seq */
-    inline hash_t calc_hash(string seq){
-        int k = seq.length();
-        const char* x = seq.c_str();
-        return calc_hash(x, k);
-    };
-
+ 
     inline void calc_hash(const char* seq, const int& len,
         char* reverse,
         hash_t* forhash, hash_t* revhash,
@@ -305,7 +274,7 @@ namespace mkmh{
             reverse_complement(seq, reverse, len);
             MurmurHash3_x64_128(seq, len, 42, forhash);
             MurmurHash3_x64_128(reverse, len, 42, revhash);
-            *fin_hash = *forhash < *revhash ? *forhash : *revhash;
+            *fin_hash = (*((hash_t*)forhash) < *((hash_t*) revhash) ? *((hash_t*)forhash) : *((hash_t*)revhash));
         }
         else{
             *forhash = 0;
@@ -314,40 +283,65 @@ namespace mkmh{
         }
     };
 
+  
+
+    /* Calculate the 64-bit hash for a string defined by seq and the length of seq */
+    inline hash_t calc_hash(const char* seq, int seqlen){
+        char* reverse = new char[seqlen];
+        hash_t fhash[4];
+        hash_t rhash[4];
+        hash_t fin_hash[1];
+        calc_hash(seq, seqlen, reverse, fhash, rhash, fin_hash);
+        return *(fin_hash);
+    }
+
+     /* Calculate the hash for a string seq */
+    inline hash_t calc_hash(string seq){
+        int k = seq.length();
+        const char* x = seq.c_str();
+        return calc_hash(x, k);
+    };
+
+
+    inline void calc_hashes(const char* seq, const int& len,
+            const int& k, hash_t* hashes, int& numhashes){
+        char* reverse = new char[k];
+        uint32_t rhash[4];
+        uint32_t fhash[4];
+        //hash_t tmp_fwd;
+        //hash_t tmp_rev;
+        numhashes = len - k;
+        hashes = new hash_t[numhashes];
+        for (int i = 0; i < numhashes; ++i){
+            if (canonical(seq + i, k)){
+                reverse_complement(seq + i, reverse, k);
+                MurmurHash3_x64_128(seq + i, k, 42, fhash);
+                MurmurHash3_x64_128(reverse, k, 42, rhash);
+                hash_t tmp_fwd = *((hash_t*) fhash);
+                hash_t tmp_rev = *((hash_t*) rhash);
+                *(hashes + i) = (tmp_fwd < tmp_rev ? tmp_fwd : tmp_rev);
+            }
+            else{
+                *(hashes + i) = 0;
+            }
+
+        }
+        delete reverse;
+    };
 
 
     /* Calculate all the hashes of the kmers length k of seq */
     inline vector<hash_t> calc_hashes(const char* seq, int seq_length, int k){
-        vector<hash_t> ret;
-        ret.reserve(seq_length - k);
-        //#pragma omp parallel for
-        for (int i = 0; i < seq_length - k; i++){
-            char khash[16];
-            char rev_rev_khash[16];
-            const char* start = seq + i;
-
-            char* rev_rev_s = new char[k];
-            reverse_complement(start, rev_rev_s, k);
-            
-            // need to handle reverse of char*
-            MurmurHash3_x64_128(start, k, 42, khash);
-            MurmurHash3_x64_128((const char*) rev_rev_s, k, 42, rev_rev_khash);
-
-            //hash_t tmp_for = hash_t(khash[2]) << 32 | hash_t(khash[1]);
-            //hash_t tmp_rev = hash_t(rev_rev_khash[2]) << 32 | hash_t(rev_rev_khash[1]);
-            hash_t tmp_rev = *((hash_t *) rev_rev_khash);
-            hash_t tmp_for = *((hash_t *) khash);
-            if (!canonical(rev_rev_s, k)){
-                //cerr << "Noncanonical bases found; exluding... " << rev_rev_s << endl;
-                //continue;     
-                tmp_for = 0;
-                tmp_rev = 0;
-            }
-            #pragma omp critical
-            ret.push_back( tmp_for < tmp_rev ? tmp_for : tmp_rev );
-            delete [] rev_rev_s;
+        int numhashes = 0;
+        hash_t* hashes;
+        calc_hashes(seq, seq_length, k, hashes, numhashes);
+        vector<hash_t> ret(numhashes);
+        for (int i = 0; i < numhashes; i++){
+            ret[i] = *(hashes + i);
         }
-       
+
+        delete [] hashes;
+
         return ret;
     };
 
@@ -357,56 +351,8 @@ namespace mkmh{
         int l = seq.length();
         return calc_hashes(x, l, k);
     }
-
-    // /** Calculate the hashes of the kmers length k of seq **/
-    // void calc_hashes(const char* seq, const int& len,
-    //         const int& k, hash_t* hashes, int& numhashes);
-
     /** Calculate the hashes for kmers of multiple lengths in <kmer>
      */
-    // inline void calc_hashes(const char* seq, const int& len,
-    //             vector<int>& kmer, hash_t* hashes, int& num_hashes){
-        
-    //     assert(num_hashes == 0);
-    //     hash_t* tmp;
-    //     for (int i = 0; i < kmer.size(); ++i){
-    //         int k = kmer[i];
-    //         hash_t* khashes = new hash_t[len - k];
-    //         int n = len - k;
-    //         calc_hashes(seq, len, k, khashes, n);
-    //         tmp = new hash_t[num_hashes + n];
-    //         copy(hashes, hashes + num_hashes, tmp);
-    //         copy(khashes, khashes + n, tmp + num_hashes);
-    //         delete [] hashes;
-    //         delete [] khashes;
-    //         hashes = tmp;
-    //         num_hashes += n;
-    //     }
-    // };
-
-    inline void calc_hashes(const char* seq, const int& len,
-            const int& k, hash_t* hashes, int& numhashes){
-        char* reverse = new char[k + 1];
-        //hash_t* rhash;
-        char rhash[16];
-        char fhash[16];
-        numhashes = len - k;
-        hashes = new hash_t[numhashes];
-            for (int i = 0; i < numhashes; ++i){
-                if (canonical(seq + i, k)){
-                    reverse_complement(seq + i, reverse, k);
-                    MurmurHash3_x64_128(seq + i, k, 42, fhash);
-                    MurmurHash3_x64_128(reverse, k, 42, rhash);
-                    *(hashes + i) = *(fhash) < *(rhash) ? *(fhash) : *(rhash);
-                }
-                else{
-                    *(hashes + i) = 0;
-                }
-
-            }
-        delete reverse;
-    };
-
    
 }
 

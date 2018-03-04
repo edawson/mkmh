@@ -60,7 +60,26 @@ TEST_CASE("minimizers behave as expected", "[minimizers]"){
 }
 
 TEST_CASE("Calc_hashes functions produce the right hashes", "[calc_hashes]"){
+    char  o [8] = "ACCCCTG";
 
+    SECTION("Hashes for char* are consistent"){
+    hash_t* h;
+    int numhashes;
+    calc_hashes((const char*) o, 7, 4, h, numhashes);
+    
+    bool trip = false;
+    for (int i = 0; i < 7 - 4; i++){
+        trip = *(h + i) != calc_hash(o + i, 4);
+    }
+    REQUIRE(trip == false);
+    
+    }
+    
+    
+    vector<hash_t> x = calc_hashes((const char*) o, 7, 4);
+    for (auto y : x){
+        cout << y << endl;
+    }
 }
 
 TEST_CASE("Calc_hash family of functions produce the right hash", "[calc_hash()]"){
