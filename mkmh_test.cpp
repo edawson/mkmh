@@ -3,6 +3,7 @@
 #include "mkmh.hpp"
 #include <fstream>
 #include <string>
+#include <algorithm>
 
 
 using namespace std;
@@ -10,38 +11,67 @@ using namespace mkmh;
 TEST_CASE("Reverse complement function works", "[reverse_complement]"){
     string t = "ACTGGCC";
     string rev = reverse_complement(t);
-    //REQUIRE(rev == "GGCCAGT");
+    
+    SECTION("reverse_complement works on C++ strings."){
+        REQUIRE(rev == "GGCCAGT");
+    }
+
 
     char k [6] = "AGGTC";
     char* ret = new char[6];
     char* retret = new char[6];
     reverse_complement(k, ret, 5);
-    cerr << ret << endl;
-    REQUIRE(strcmp(ret, "GACCT") == 0);
+    
+    SECTION("reverse_complement returns expected string"){
+        REQUIRE(strcmp(ret, "GACCT") == 0);
+        REQUIRE(strlen(ret) == 5);
+    }
+   
+
     reverse_complement(ret, retret, 5);
-    REQUIRE(ret == ret);
-    REQUIRE(*retret == *k);
+    SECTION("reverse_complement does not affect its sequence pointer"){
+        REQUIRE(ret == ret);
+    }
+
+    SECTION("reverse_complement, when applied twice, returns the original input string"){
+        REQUIRE(*retret == *k);
+    }
 
 
 }
 
-TEST_CASE("Canonical function catches non-valid chars", "[canonical]"){
+TEST_CASE("Canonical function works", "[canonical]"){
     string t = "ACTGGCNNNN";
-    REQUIRE(canonical(t) == false);
+    SECTION("canonical(string) catches Ns in a DNA string"){
+        REQUIRE(canonical(t) == false);
+    }
 
     char k [27] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    REQUIRE(canonical(k, 26) == false);
+    SECTION("canonical(char* , len) catches non-DNA letters"){
+        REQUIRE(canonical(k, 26) == false);
+    }
 
     char o [8] = "ACCCCTG";
-    REQUIRE(canonical(o, 7) == true);
+    SECTION("canonical(char*, len) doesn't flag valid uppercase DNA characters"){
+        REQUIRE(canonical(o, 7) == true);
+    }
 
 
     char low[8] = "acccctg";
-    REQUIRE(canonical(low, 7) == true);
+    SECTION("canonical(char*, len) doesn't flag valid lowercase DNA characters"){
+        REQUIRE(canonical(low, 7) == true);
+    }
 }
 
 TEST_CASE("Upper works for strings and chars"){
+    char c[10] = "actgtgccc";
+    char noncon[4] = "aBd";
+    string d = "ABCDEFG";
 
+    SECTION("to_upper works for char*"){
+        to_upper(c, 9);
+        REQUIRE(strcmp(c, "ACTGTGCCC") == 0);
+    }
 }
 
 TEST_CASE("v_set removes duplicates and returns a vector", "[v_set]"){
@@ -63,24 +93,34 @@ TEST_CASE("minimizers behave as expected", "[minimizers]"){
 TEST_CASE("Calc_hashes functions produce the right hashes", "[calc_hashes]"){
     char  o [8] = "ACCCCTG";
 
-    SECTION("Hashes for char* are consistent"){
-    hash_t* h;
-    int numhashes;
-    calc_hashes((const char*) o, 7, 4, h, numhashes);
+    SECTION("Hashes from calc_hashes for char* are consistent with those from calc_hash"){
+        hash_t* h;
+        int numhashes;
+        calc_hashes((const char*) o, 7, 4, h, numhashes);
     
-    bool trip = false;
-    for (int i = 0; i < 7 - 4; i++){
-        trip = *(h + i) != calc_hash(o + i, 4);
+        bool trip = false;
+        for (int i = 0; i < 7 - 4; i++){
+            trip = *(h + i) != calc_hash(o + i, 4);
+        }
+        REQUIRE(trip == false);
     }
-    REQUIRE(trip == false);
     
+    SECTION("calc_hashes functions all return the same hashes"){
+        vector<hash_t> x = calc_hashes((const char*) o, 7, 4);
+        hash_t* h;
+        int num;
+        
+        calc_hashes((const char*) o, 7, 4, h, num);
+        vector<hash_t> y (h, h + num);
+
+        string zstr(o);
+        vector<hash_t> z = calc_hashes(zstr, 4);
+
+        REQUIRE( std::mismatch(x.begin(), x.end(), y.begin(), y.end()).first == x.end());
+        REQUIRE( std::mismatch(x.begin(), x.end(), z.begin(), z.end()).first == x.end());
+        REQUIRE( std::mismatch(y.begin(), y.end(), z.begin(), z.end()).first == y.end());
     }
-    
-    
-    vector<hash_t> x = calc_hashes((const char*) o, 7, 4);
-    for (auto y : x){
-        cout << y << endl;
-    }
+
 }
 
 TEST_CASE("Calc_hash family of functions produce the right hash", "[calc_hash()]"){

@@ -5,7 +5,7 @@ ifdef IS_ICPC
 	CXXFLAGS:= -O3 -std=c++11 -xAVX -qopenmp -funroll-loops -ggdb -pg
 else
 	CXX:=g++
-	CXXFLAGS:= -O3 -std=c++11 -fopenmp -mtune=native
+	CXXFLAGS:= -O3 -std=c++11 -fopenmp -mtune=native -ggdb
 endif
 
 LD_LIB_FLAGS:= -Lmurmur3 -L.

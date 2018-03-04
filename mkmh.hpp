@@ -95,7 +95,8 @@ namespace mkmh{
      * */
 
     inline void reverse_complement(const char* seq, char* ret, int len){
-        assert(seq != ret);
+        
+        //assert(seq != ret);
         
         for (int i = len - 1; i >=0; i--){
             ret[ len - 1 - i ] = (char) rev_arr[ (int) seq[i] - 65];
@@ -110,6 +111,7 @@ namespace mkmh{
         char* ret = new char[seqlen];
         reverse_complement(s, ret, seqlen);
         string s_revc(ret);
+        delete ret;
 
         return s_revc;
     };
@@ -293,9 +295,24 @@ namespace mkmh{
         int l = seq.length();
         return calc_hashes(x, l, k);
     }
+    
+    inline vector<hash_t> calc_hashes(const char* seq, const int& len, const vector<int>& k_sizes){
+        vector<hash_t> ret;
+        for (auto k : k_sizes){
+            vector<hash_t> t = calc_hashes(seq, len, k);
+            ret.insert(t.begin(), t.end(), ret.end());
+        }
+        return ret;
+    };
+    
     /** Calculate the hashes for kmers of multiple lengths in <kmer>
     */
+    inline vector<hash_t> calc_hashes(string seq, const vector<int>& k_sizes){
+        const char* x = seq.c_str();
+        int l = seq.length();
 
+        return calc_hashes(x, l, k_sizes);
+    };
 
     /** Calculate a MinHash sketch for kmers length (2 * k) with skip bases in between the two k-length halves **/
     vector<hash_t> allhash_64_linkmer(string seq, int k, int skip = 0);
