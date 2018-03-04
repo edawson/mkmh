@@ -13,9 +13,10 @@ TEST_CASE("Reverse complement function works", "[reverse_complement]"){
     //REQUIRE(rev == "GGCCAGT");
 
     char k [6] = "AGGTC";
-    char* ret = new char[5];
-    char* retret = new char[5];
+    char* ret = new char[6];
+    char* retret = new char[6];
     reverse_complement(k, ret, 5);
+    cerr << ret << endl;
     REQUIRE(strcmp(ret, "GACCT") == 0);
     reverse_complement(ret, retret, 5);
     REQUIRE(ret == ret);
