@@ -126,3 +126,28 @@ TEST_CASE("Calc_hashes functions produce the right hashes", "[calc_hashes]"){
 TEST_CASE("Calc_hash family of functions produce the right hash", "[calc_hash()]"){
 
 }
+
+TEST_CASE("hash_intersection family of functions work correctly", "[hash_intersection]"){
+    
+    hash_t* x = new hash_t[4];
+    hash_t* y = new hash_t[6];
+    int num;
+
+    x[0] = 0;
+    x[1] = 2;
+    x[2] = 20938475420;
+    x[3] = 987728;
+
+    y[0] = 0;
+    y[1] = 1;
+    y[2] = 0;
+    y[3] = 20938475420;
+    y[4] = 10;
+    y[5] = 987728;
+
+    SECTION("fastest hash-intersection works"){
+        hash_intersection_size(x, 4, y, 6, num);
+        REQUIRE(num == 3);
+    }
+
+}
