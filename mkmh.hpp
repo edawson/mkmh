@@ -155,6 +155,10 @@ namespace mkmh{
         std::sort(hashes, hashes + len);
     };
 
+    inline void sort(vector<hash_t>& hashes){
+        std::sort(hashes.begin(), hashes.end());
+    };
+
 
 
     /* Returns the forward and reverse-reverse complement kmers of a sequence */
