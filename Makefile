@@ -5,7 +5,7 @@ ifdef IS_ICPC
 	CXXFLAGS:= -O3 -std=c++11 -xAVX -qopenmp -funroll-loops -ggdb -pg
 else
 	CXX:=g++
-	CXXFLAGS:= -O3 -std=c++11 -fopenmp -mtune=native
+	CXXFLAGS:= -O3 -std=c++11 -fopenmp -mtune=native -ggdb
 endif
 
 LD_LIB_FLAGS:= -Lmurmur3 -L.
@@ -19,6 +19,9 @@ example: example.cpp
 
 test: mkmh_test.cpp libmkmh.a murmur3/libmurmur3.a
 	$(CXX) -o $@ $< $(LD_LIB_FLAGS) $(LD_INC_FLAGS) -lmkmh -lmurmur3 && ./test
+
+fast_test: test.cpp libmkmh.a murmur3/libmurmur3.a
+	$(CXX) $(CXXFLAGS) -o $@ $< $(LD_LIB_FLAGS) $(LD_INC_FLAGS) -lmkmh -lmurmur3
 
 mkmh.o: mkmh.cpp mkmh.hpp murmur3/libmurmur3.a murmur3/murmur3.hpp
 	$(CXX) $(CXXFLAGS) -c $< $(LD_LIB_FLAGS) $(LD_INC_FLAGS) -lmurmur3

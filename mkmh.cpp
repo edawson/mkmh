@@ -18,7 +18,6 @@ namespace mkmh{
         //priority_queue<string> ret(base.begin(), base.end());
         for (auto k : kmer){
             vector<string> outmers(seq.length() - k, "");
-            #pragma omp parallel for
             for (int i = 0; i < seq.length() - k; i++){
                 string forward = seq.substr(i, k);
                 string revrev = reverse(reverse_complement(forward));

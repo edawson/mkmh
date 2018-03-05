@@ -143,8 +143,8 @@ int main(){
     vector<int> three;
     three.push_back(3);
     priority_queue<string> a_heap = kmer_heap(a, three);
-    //    cerr << a_heap.top() << endl;
-    testify(t_num++, "Kmer heap produces expected lowest kmer", (a_heap.top() == "GCA"));
+        //cerr << a_heap.top() << endl;
+    testify(t_num++, "Kmer heap produces expected lowest kmer", (a_heap.top() == "CTT"));
     while (a_heap.size() > 1){
         //cerr << a_heap.top() << endl;
         a_heap.pop();
