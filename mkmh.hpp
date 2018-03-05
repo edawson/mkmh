@@ -397,7 +397,7 @@ namespace mkmh{
                     reverse_complement(seq + i, reverse, k);
                     MurmurHash3_x64_128(seq + i, k, 42, fhash);
                     MurmurHash3_x64_128(reverse, k, 42, rhash);
-                    *(hashes + i) = *(fhash) < *(rhash) ? *(fhash) : *(rhash);
+                    *(hashes + i) = *(fhash) < *(rhash) ? *((hash_t *) fhash) : *((hash_t *) rhash);
                 }
                 else{
                     *(hashes + i) = 0;

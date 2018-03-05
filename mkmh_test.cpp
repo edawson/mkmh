@@ -60,7 +60,11 @@ TEST_CASE("minimizers behave as expected", "[minimizers]"){
 }
 
 TEST_CASE("Calc_hashes functions produce the right hashes", "[calc_hashes]"){
-
+    string x = "ACTGCCGTCCCCGT";
+    calc_hashes(x, 5);
+    hash_t* hashes;
+    int hashnum;
+    calc_hashes(x.c_str(), x.length(), 5, hashes, hashnum);
 }
 
 TEST_CASE("Calc_hash family of functions produce the right hash", "[calc_hash()]"){
