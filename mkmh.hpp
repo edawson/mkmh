@@ -280,7 +280,9 @@ namespace mkmh{
         delete reverse;
     };
 
-    inline void calc_hashes(const char* seq, int seq_length, vector<int> kmer_sizes, hash_t*& hashes, int& numhashes){
+    inline void calc_hashes(const char* seq, int seq_length,
+     vector<int> kmer_sizes,
+     hash_t*& hashes, int& numhashes){
         numhashes = 0;
 
         // This holds the number of hashes preceeding the
@@ -327,7 +329,7 @@ namespace mkmh{
         vector<hash_t> ret;
         for (auto k : k_sizes){
             vector<hash_t> t = calc_hashes(seq, len, k);
-            ret.insert(t.begin(), t.end(), ret.end());
+            ret.insert(ret.end(), t.begin(), t.end());
         }
         return ret;
     };

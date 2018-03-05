@@ -117,9 +117,19 @@ TEST_CASE("Calc_hashes functions produce the right hashes", "[calc_hashes]"){
         string zstr(o);
         vector<hash_t> z = calc_hashes(zstr, 4);
 
+        vector<int> kmers;
+        kmers.push_back(4);
+        vector<hash_t> multis = calc_hashes(zstr, kmers);
+
         REQUIRE( std::mismatch(x.begin(), x.end(), y.begin(), y.end()).first == x.end());
         REQUIRE( std::mismatch(x.begin(), x.end(), z.begin(), z.end()).first == x.end());
         REQUIRE( std::mismatch(y.begin(), y.end(), z.begin(), z.end()).first == y.end());
+        REQUIRE(std::mismatch(x.begin(), x.end(), multis.begin(), multis.end()).first == x.end());
+    }
+
+    SECTION("calc_hashes works with multiple kmer sizes"){
+        vector<int> kmers;
+        kmers.push_back(4);
     }
 
 }
