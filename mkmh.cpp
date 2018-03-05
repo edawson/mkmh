@@ -198,64 +198,6 @@ namespace mkmh{
         return ret;
     }
 
-    // vector<hash_t> preserve_kmer_mh64(string seq, vector<int> kSizes, int hashSize);
-    vector<hash_t> allhash_unsorted_64(string& seq, vector<int>& k){
-        int seqlen = seq.length();
-        return allhash_unsorted_64_fast(seq.c_str(), k);
-
-    }
-
-    vector<hash_t> minhash_64_fast(string seq, vector<int> kmer, int hashSize, bool useBottom){
-        vector<hash_t> ret;
-        //ret.reserve(seq.length() * kmer.size());
-        for (auto k : kmer){
-            vector<hash_t> tmp = calc_hashes(seq, k);
-            ret.insert(ret.end(), tmp.begin(), tmp.end());
-        }
-        std::sort(ret.begin(), ret.end());
-        
-        int nonzero_ind = 0;
-        while (ret[nonzero_ind] == 0){
-            nonzero_ind++;
-        }
-        hashSize += nonzero_ind;
-
-        int hashmax = hashSize < ret.size() ? hashSize : ret.size() - 1 ;
-
-        return useBottom ?
-            vector<hash_t> (ret.begin() + nonzero_ind, ret.begin() + hashmax) :
-            vector<hash_t> (ret.rbegin() + nonzero_ind, ret.rbegin() + hashmax);
-    }
-
-
-
-
-    vector<hash_t> allhash_unsorted_64_fast(const char* seq, vector<int>& kmer){
-        vector<hash_t> ret;
-        ret.reserve(strlen(seq) * kmer.size());
-        for (auto k : kmer){
-            vector<hash_t> tmp = calc_hashes(seq, k);
-            ret.insert(ret.end(), tmp.begin(), tmp.end());
-        }
-        return ret;
-    }
-
-
-    tuple<hash_t*, int> allhash_unsorted_64_fast(const char* seq, int& seqlen, vector<int>& k_sizes){
-        hash_t* ret;
-        int ret_size = 0;
-
-        vector<hash_t> cont;
-        for (auto i : k_sizes){
-            vector<hash_t> hashes = calc_hashes(seq, seqlen, i);
-            cont.insert(cont.end(), hashes.begin(), hashes.end());
-        }
-        ret = &(*cont.begin());
-        ret_size = cont.size();
-        return std::make_tuple(ret, ret_size);
-
-    }
-
 
     vector<hash_t> minhashes(hash_t* hashes, int num_hashes, int sketch_size, bool useBottom){
        vector<hash_t> x = vector<hash_t>(hashes, hashes + num_hashes); 

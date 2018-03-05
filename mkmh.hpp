@@ -151,6 +151,9 @@ namespace mkmh{
         }
     };
 
+    inline void sort(hash_t* hashes, int len){
+        std::sort(hashes, hashes + len);
+    };
 
 
 
@@ -277,6 +280,26 @@ namespace mkmh{
         delete reverse;
     };
 
+    inline void calc_hashes(const char* seq, int seq_length, vector<int> kmer_sizes, hash_t*& hashes, int& numhashes){
+        numhashes = 0;
+
+        // This holds the number of hashes preceeding the
+        // kmer size currently being hashed.
+        vector<int> offsets;
+        for (auto k : kmer_sizes){
+            offsets.push_back(numhashes);
+            numhashes += seq_length - k;
+        }
+        hashes = new hash_t [numhashes];
+
+        for (int i = 0; i < kmer_sizes.size(); ++i){
+            int k = kmer_sizes[i];
+            int local_numhash;
+            hash_t* l_start = hashes + offsets[i];
+            calc_hashes(seq, seq_length, k, l_start, local_numhash);
+        }
+    }
+
 
     /* Calculate all the hashes of the kmers length k of seq */
     inline vector<hash_t> calc_hashes(const char* seq, int seq_length, int k){
@@ -314,7 +337,6 @@ namespace mkmh{
     inline vector<hash_t> calc_hashes(string seq, const vector<int>& k_sizes){
         const char* x = seq.c_str();
         int l = seq.length();
-
         return calc_hashes(x, l, k_sizes);
     };
 
@@ -344,15 +366,6 @@ namespace mkmh{
     /* Returns the forward shingles of all k sizes of a sequence */
     /* Shingles are just forward-only kmers */
     vector<string> multi_shingle(string seq, vector<int> k);
-
-    /* Return all hashes, unsorted*/
-    vector<hash_t> allhash_unsorted_64(string& seq, vector<int>& k);
-
-    vector<hash_t> allhash_unsorted_64_fast(const char* seq, vector<int>& k_sizes);
-
-
-    tuple<hash_t*, int> allhash_unsorted_64_fast(const char* seq, int& seqlen, vector<int>& k_sizes);
-
 
     /** Base MinHash function - return the lowest n = min(num_hashes, sketch_size) hashes. **/
     vector<hash_t> minhashes(hash_t* hashes, int num_hashes, int sketch_size, bool useBottom=true);    
