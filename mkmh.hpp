@@ -14,12 +14,15 @@
 #include <assert.h>
 #include <omp.h>
 #include <assert.h>
+
 #include "murmur3.hpp"
+#include "HASHTCounter.hpp"
 
 #define DBGG
 
 namespace mkmh{
     using namespace std;
+    using namespace mkmh;
 
     typedef uint64_t hash_t;
 
@@ -263,6 +266,17 @@ namespace mkmh{
     };
 
 
+
+    /** Primary calc_hashes function **/
+    /** Takes the string to be hashed, its length,
+     *  a single kmer size, a pointer to hold the hashes,
+     *  and an integer to hold the number of hashes.
+     *  
+     *  Possibly thread safe:
+     *      seq, len and k are not modified
+     *      new [] operator is known threadsafe
+     *      User must handle hashes and numhashes properly in calling function.
+     **/
     inline void calc_hashes(const char* seq, const int& len,
             const int& k, hash_t*& hashes, int& numhashes){
         char* reverse = new char[k];
@@ -289,6 +303,10 @@ namespace mkmh{
         delete reverse;
     };
 
+    /** calc_hashes for multiple kmers sizes **/
+    /** returns an array, with hashes for each kmer size concatenated
+     * to those of the previous kmer size
+     **/
     inline void calc_hashes(const char* seq, int seq_length,
      vector<int> kmer_sizes,
      hash_t*& hashes, int& numhashes){
@@ -342,6 +360,14 @@ namespace mkmh{
         }
         return ret;
     };
+
+    /** Calculate the hashes of seq
+     *  and fill in a HASHTCounter htc so that
+     *  hashes can be kept or removed based on the number of times
+     *  they occur in seq.
+     **/
+    void calc_hashes(const char* seq, const int& len,
+            const int& k, hash_t*& hashes, int& numhashes, HASHTCounter htc);
     
     /** Calculate the hashes for kmers of multiple lengths in <kmer>
     */

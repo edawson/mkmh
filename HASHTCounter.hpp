@@ -9,10 +9,10 @@
 #include <sstream>
 #include <fstream>
 
-#include "mkmh.hpp"
-
-
 namespace mkmh{
+    using namespace mkmh;
+    using namespace std;
+    typedef uint64_t hash_t;
     class HASHTCounter{
 
     public:

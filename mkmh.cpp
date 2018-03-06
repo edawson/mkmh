@@ -73,6 +73,34 @@ namespace mkmh{
         }
     }
 
+ 
+    void calc_hashes(const char* seq, const int& len,
+            const int& k, hash_t*& hashes, int& numhashes, mkmh::HASHTCounter htc){
+        char* reverse = new char[k];
+        uint32_t rhash[4];
+        uint32_t fhash[4];
+        //hash_t tmp_fwd;
+        //hash_t tmp_rev;
+        numhashes = len - k;
+        hashes = new hash_t[numhashes];
+        for (int i = 0; i < numhashes; ++i){
+            if (canonical(seq + i, k)){
+                reverse_complement(seq + i, reverse, k);
+                MurmurHash3_x64_128(seq + i, k, 42, fhash);
+                MurmurHash3_x64_128(reverse, k, 42, rhash);
+                hash_t tmp_fwd = *((hash_t*) fhash);
+                hash_t tmp_rev = *((hash_t*) rhash);
+                hashes[i] = (tmp_fwd < tmp_rev ? tmp_fwd : tmp_rev);
+                htc.increment(hashes[i]);
+            }
+            else{
+                hashes[i] = 0;
+            }
+
+        }
+        delete reverse;
+}
+
     void print_kmers(char* seq, const int& len, int k){
         int kmerized_length = len - k;
         for (int i = 0; i < kmerized_length - 1; ++i){
