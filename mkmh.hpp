@@ -151,8 +151,13 @@ namespace mkmh{
         }
     };
 
-    inline void sort(hash_t* hashes, int len){
-        std::sort(hashes, hashes + len);
+    inline void sort(hash_t* hashes, int len, bool descending = false){
+        if (!descending){
+           std::sort(hashes, hashes + len);
+        }else{
+            std::sort(hashes, hashes + len, std::less<uint64_t>());
+
+        }
     };
 
     inline void sort(vector<hash_t>& hashes){
@@ -372,6 +377,28 @@ namespace mkmh{
     /* Returns the forward shingles of all k sizes of a sequence */
     /* Shingles are just forward-only kmers */
     vector<string> multi_shingle(string seq, vector<int> k);
+
+    /** MinHash - given an array of hashes, modify the mins array to hold 
+     * the lowest/highest N (excluding zeros) **/
+    inline void minhashes(hash_t* hashes, int num_hashes,
+             int sketch_size,
+             hash_t*& ret,
+             int& retsize,
+            bool use_bottom=true){
+        
+        ret = new hash_t[sketch_size];
+        mkmh::sort(hashes, num_hashes, !use_bottom);
+
+        int maxlen = min(num_hashes, sketch_size);
+        int start = 0;
+        while (retsize < sketch_size && start < num_hashes){
+            if (hashes[start] != 0){
+                ret[retsize] = hashes[start];
+                ++retsize;
+            }
+            ++start;
+        }
+    };
 
     /** Base MinHash function - return the lowest n = min(num_hashes, sketch_size) hashes. **/
     vector<hash_t> minhashes(hash_t* hashes, int num_hashes, int sketch_size, bool useBottom=true);    
