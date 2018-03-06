@@ -11,8 +11,8 @@ endif
 LD_LIB_FLAGS:= -Lmurmur3 -L.
 LD_INC_FLAGS:= -I. -Imurmur3
 
-libmkmh.a: mkmh.o murmur3/libmurmur3.a Makefile
-	ar -rs $@ $< murmur3/libmurmur3.a
+libmkmh.a: mkmh.o HASHTCounter.o murmur3/libmurmur3.a Makefile
+	ar -rs $@ $< HASHTCounter.o murmur3/libmurmur3.a
 
 example: example.cpp
 	$(CXX) $(CXXFLAGS) -o $@ $< $(LD_LIB_FLAGS) $(LD_INC_FLAGS) -lmkmh -lmurmur3
@@ -23,8 +23,11 @@ test: mkmh_test.cpp libmkmh.a murmur3/libmurmur3.a
 fast_test: test.cpp libmkmh.a murmur3/libmurmur3.a
 	$(CXX) $(CXXFLAGS) -o $@ $< $(LD_LIB_FLAGS) $(LD_INC_FLAGS) -lmkmh -lmurmur3
 
-mkmh.o: mkmh.cpp mkmh.hpp murmur3/libmurmur3.a murmur3/murmur3.hpp
+mkmh.o: mkmh.cpp mkmh.hpp HASHTCounter.o murmur3/libmurmur3.a murmur3/murmur3.hpp
 	$(CXX) $(CXXFLAGS) -c $< $(LD_LIB_FLAGS) $(LD_INC_FLAGS) -lmurmur3
+
+HASHTCounter.o: HASHTCounter.cpp HASHTCounter.hpp
+	$(CXX) $(CXXFLAGS) -c $< $(LD_LIB_FLAGS) $(LD_INC_FLAGS)
 
 murmur3/libmurmur3.a:
 	+cd murmur3 && $(MAKE) lib
