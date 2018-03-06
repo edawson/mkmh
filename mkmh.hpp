@@ -6,6 +6,7 @@
 #include <set>
 #include <unordered_map>
 #include <string>
+#include <cstring>
 #include <sstream>
 #include <locale>
 #include <cstdint>
@@ -324,10 +325,66 @@ namespace mkmh{
         for (int i = 0; i < kmer_sizes.size(); ++i){
             int k = kmer_sizes[i];
             int local_numhash;
-            hash_t* l_start = hashes + offsets[i];
+            hash_t* l_start;
             calc_hashes(seq, seq_length, k, l_start, local_numhash);
+            memcpy(hashes + offsets[i], l_start, local_numhash * sizeof(hash_t));
+            delete [] l_start;
         }
     }
+
+    inline void calc_hashes(const char* seq, const int& len,
+            const int& k, hash_t*& hashes, int& numhashes, mkmh::HASHTCounter*& htc){
+        char* reverse = new char[k];
+        uint32_t rhash[4];
+        uint32_t fhash[4];
+        //hash_t tmp_fwd;
+        //hash_t tmp_rev;
+        numhashes = len - k;
+        hashes = new hash_t[numhashes];
+        for (int i = 0; i < numhashes; ++i){
+            if (canonical(seq + i, k)){
+                reverse_complement(seq + i, reverse, k);
+                MurmurHash3_x64_128(seq + i, k, 42, fhash);
+                MurmurHash3_x64_128(reverse, k, 42, rhash);
+                hash_t tmp_fwd = *((hash_t*) fhash);
+                hash_t tmp_rev = *((hash_t*) rhash);
+                hashes[i] = (tmp_fwd < tmp_rev ? tmp_fwd : tmp_rev);
+                htc->increment(hashes[i]);
+            }
+            else{
+                hashes[i] = 0;
+            }
+
+        }
+        delete reverse;
+    }
+
+    inline void calc_hashes(const char* seq, int seq_length,
+     vector<int> kmer_sizes,
+     hash_t*& hashes, int& numhashes,
+      HASHTCounter*& htc){
+        
+        numhashes = 0;
+
+        // This holds the number of hashes preceeding the
+        // kmer size currently being hashed.
+        vector<int> offsets;
+        for (auto k : kmer_sizes){
+            offsets.push_back(numhashes);
+            numhashes += seq_length - k;
+        }
+        hashes = new hash_t [numhashes];
+
+        for (int i = 0; i < kmer_sizes.size(); ++i){
+            int k = kmer_sizes[i];
+            int local_numhash;
+            hash_t* l_start = hashes + offsets[i];
+            // HTC gets incremented within this function, so no need to do a bulk increment.
+            calc_hashes(seq, seq_length, k, l_start, local_numhash, htc);
+            memcpy(hashes + offsets[i], l_start, local_numhash * sizeof(hash_t));
+            delete [] l_start;
+        }
+    };
 
 
     /* Calculate all the hashes of the kmers length k of seq */
@@ -367,7 +424,7 @@ namespace mkmh{
      *  they occur in seq.
      **/
     void calc_hashes(const char* seq, const int& len,
-            const int& k, hash_t*& hashes, int& numhashes, HASHTCounter htc);
+            const int& k, hash_t*& hashes, int& numhashes, HASHTCounter*& htc);
     
     void calc_hashes(const char* seq, const int& len,
             const int& k, hash_t*& hashes, int& numhashes, unordered_map<hash_t, int> counts);
@@ -422,6 +479,28 @@ namespace mkmh{
         int start = 0;
         while (retsize < sketch_size && start < num_hashes){
             if (hashes[start] != 0){
+                ret[retsize] = hashes[start];
+                ++retsize;
+            }
+            ++start;
+        }
+    };
+
+    inline void minhashes_min_occurrence_filter(hash_t* hashes, int num_hashes,
+             int sketch_size,
+             hash_t*& ret,
+             int& retsize,
+             HASHTCounter* htc,
+             int min_occ = 0,
+            bool use_bottom=true){
+        
+        ret = new hash_t[sketch_size];
+        mkmh::sort(hashes, num_hashes, !use_bottom);
+
+        int maxlen = min(num_hashes, sketch_size);
+        int start = 0;
+        while (retsize < sketch_size && start < num_hashes){
+            if (hashes[start] != 0 && htc->get(hashes[start]) > min_occ){
                 ret[retsize] = hashes[start];
                 ++retsize;
             }
