@@ -369,6 +369,9 @@ namespace mkmh{
     void calc_hashes(const char* seq, const int& len,
             const int& k, hash_t*& hashes, int& numhashes, HASHTCounter htc);
     
+    void calc_hashes(const char* seq, const int& len,
+            const int& k, hash_t*& hashes, int& numhashes, unordered_map<hash_t, int> counts);
+    
     /** Calculate the hashes for kmers of multiple lengths in <kmer>
     */
     inline vector<hash_t> calc_hashes(string seq, const vector<int>& k_sizes){
