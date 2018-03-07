@@ -141,6 +141,14 @@ TEST_CASE("Calc_hashes functions produce the right hashes", "[calc_hashes]"){
         kmers.push_back(4);
     }
 
+    SECTION("calc_hashes returns identical hashes for forward and reverse compliment"){
+        char s [8] = "AAAAAAA";
+        char t [8] = "TTTTTTT";
+        vector<hash_t> s_hashes = calc_hashes(s, 7, 4);
+        vector<hash_t> t_hashes = calc_hashes(t, 7, 4);
+        REQUIRE(std::mismatch(s_hashes.begin(), s_hashes.end(), t_hashes.begin(), t_hashes.end()).first == s_hashes.end());
+    }
+
 }
 
 TEST_CASE("Sort and minhashes return the expect", "sort / minhash"){
