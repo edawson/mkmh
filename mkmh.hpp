@@ -101,6 +101,9 @@ namespace mkmh{
     inline void reverse_complement(const char* seq, char* ret, int len){
         
         //assert(seq != ret);
+        if (ret == NULL){
+            ret = new char[len+1];
+        }
         
         for (int i = len - 1; i >=0; i--){
             ret[ len - 1 - i ] = (char) rev_arr[ (int) seq[i] - 65];
@@ -155,7 +158,7 @@ namespace mkmh{
         }
     };
 
-    inline void sort(hash_t* hashes, int len, bool descending = false){
+    inline void sort(hash_t*& hashes, int len, bool descending = false){
         if (!descending){
            std::sort(hashes, hashes + len);
         }else{
@@ -280,7 +283,7 @@ namespace mkmh{
      **/
     inline void calc_hashes(const char* seq, const int& len,
             const int& k, hash_t*& hashes, int& numhashes){
-        char* reverse = new char[k];
+        char* reverse = new char[k+1];
         uint32_t rhash[4];
         uint32_t fhash[4];
         //hash_t tmp_fwd;
@@ -334,7 +337,7 @@ namespace mkmh{
 
     inline void calc_hashes(const char* seq, const int& len,
             const int& k, hash_t*& hashes, int& numhashes, mkmh::HASHTCounter*& htc){
-        char* reverse = new char[k];
+        char* reverse = new char[k+1];
         uint32_t rhash[4];
         uint32_t fhash[4];
         //hash_t tmp_fwd;
@@ -343,8 +346,8 @@ namespace mkmh{
         hashes = new hash_t[numhashes];
         for (int i = 0; i < numhashes; ++i){
             if (canonical(seq + i, k)){
-                reverse_complement(seq + i, reverse, k);
-                MurmurHash3_x64_128(seq + i, k, 42, fhash);
+                reverse_complement( (seq + i), reverse, k);
+                MurmurHash3_x64_128( (seq + i), k, 42, fhash);
                 MurmurHash3_x64_128(reverse, k, 42, rhash);
                 hash_t tmp_fwd = *((hash_t*) fhash);
                 hash_t tmp_rev = *((hash_t*) rhash);
@@ -447,11 +450,11 @@ namespace mkmh{
                 ++a_ind;
                 ++b_ind;
             }
-            else if (alpha[a_ind] < beta[b_ind]){
-                ++a_ind;
+            else if (alpha[a_ind] > beta[b_ind]){
+                ++b_ind;
             }
             else{
-                ++b_ind;
+                ++a_ind;
             }
         }
         

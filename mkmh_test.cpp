@@ -93,6 +93,7 @@ TEST_CASE("minimizers behave as expected", "[minimizers]"){
 TEST_CASE("Calc_hashes functions produce the right hashes", "[calc_hashes]"){
 
     char  o [8] = "ACCCCTG";
+    char  t [8] = "ACCCCTG";
 
     SECTION("Hashes from calc_hashes for char* are consistent with those from calc_hash"){
         hash_t* h;
@@ -121,16 +122,26 @@ TEST_CASE("Calc_hashes functions produce the right hashes", "[calc_hashes]"){
         kmers.push_back(4);
         vector<hash_t> multis = calc_hashes(zstr, kmers);
 
+        vector<hash_t> matched = calc_hashes((const char*) t, 7, 4);
+
         REQUIRE( std::mismatch(x.begin(), x.end(), y.begin(), y.end()).first == x.end());
         REQUIRE( std::mismatch(x.begin(), x.end(), z.begin(), z.end()).first == x.end());
         REQUIRE( std::mismatch(y.begin(), y.end(), z.begin(), z.end()).first == y.end());
         REQUIRE(std::mismatch(x.begin(), x.end(), multis.begin(), multis.end()).first == x.end());
+        REQUIRE(std::mismatch(x.begin(), x.end(), matched.begin(), matched.end()).first == x.end());
     }
 
     SECTION("calc_hashes works with multiple kmer sizes"){
         vector<int> kmers;
         kmers.push_back(4);
     }
+
+}
+
+TEST_CASE("Sort and minhashes return the expect", "sort / minhash"){
+        string x = "ACTGGCTTGCC";
+        string y = "GGCAAGCCAGT";
+
 
 }
 
