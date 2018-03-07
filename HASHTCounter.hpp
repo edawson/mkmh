@@ -26,7 +26,7 @@ namespace mkmh{
 
         int& get(hash_t key);
 
-        void get(hash_t key, int& ret);
+        void get(const hash_t& key, int& ret);
 
         int size(void);
         void size(int sz);
