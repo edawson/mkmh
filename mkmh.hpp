@@ -502,6 +502,31 @@ namespace mkmh{
         }
     };
 
+
+    
+    inline void minhashes_frequency_filter(hash_t* hashes, int num_hashes,
+             int sketch_size,
+             hash_t*& ret,
+             int& retsize,
+             HASHTCounter* htc,
+             int min_occ = 0,
+             int max_occ = 0,
+            bool use_bottom=true){
+        
+        ret = new hash_t[sketch_size];
+        mkmh::sort(hashes, num_hashes, !use_bottom);
+
+        int maxlen = min(num_hashes, sketch_size);
+        int start = 0;
+        while (retsize < sketch_size && start < num_hashes){
+            if (hashes[start] != 0 && htc->get(hashes[start]) <= max_occ && htc->get(hashes[start]) >= min_occ){
+                ret[retsize] = hashes[start];
+                ++retsize;
+            }
+            ++start;
+        }
+    };
+
     inline void minhashes_min_occurrence_filter(hash_t* hashes, int num_hashes,
              int sketch_size,
              hash_t*& ret,
@@ -516,7 +541,7 @@ namespace mkmh{
         int maxlen = min(num_hashes, sketch_size);
         int start = 0;
         while (retsize < sketch_size && start < num_hashes){
-            if (hashes[start] != 0 && htc->get(hashes[start]) > min_occ){
+            if (hashes[start] != 0 && htc->get(hashes[start]) >= min_occ){
                 ret[retsize] = hashes[start];
                 ++retsize;
             }
