@@ -158,6 +158,8 @@ TEST_CASE("Calc_hash family of functions work correctly", "[calc_hash()]"){
         hash_t c_x = calc_hash(x);
         hash_t c_y = calc_hash(y);
         REQUIRE(c_x == c_y);
+
+        REQUIRE( calc_hash("AAAAAA") == calc_hash("TTTTTT"));
     }
 
     SECTION("Hashes of calc_hash and calc_hashes are equivalent"){
