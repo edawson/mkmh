@@ -215,6 +215,10 @@ namespace mkmh{
     /** Finds the (w,k) minimizers and reports all of them (including duplicates) **/
     vector<mkmh_minimizer> unreduced_minimizers(string seq, int k, int w); 
 
+    inline void top_64_bits(uint32_t*& hash_holder, hash_t& ret){
+        ret = static_cast<uint64_t>(hash_holder[0]) << 32 | hash_holder[1];
+    };
+
 
     // Calculate a single hash of a sequence (usually a kmer).
     // Takes in:
@@ -226,7 +230,7 @@ namespace mkmh{
     //      finhash: a 64-bit int (e.g. uint64_t) which holds the lesser of (forhash, revhash);
     inline void calc_hash(const char* seq, const int& len,
             char*& reverse,
-            hash_t*& forhash, hash_t*& revhash,
+            uint32_t*& forhash, uint32_t*& revhash,
             hash_t*& fin_hash){
 
 
@@ -234,7 +238,9 @@ namespace mkmh{
             reverse_complement(seq, reverse, len);
             MurmurHash3_x64_128(seq, len, 42, forhash);
             MurmurHash3_x64_128(reverse, len, 42, revhash);
-            *fin_hash = (*((hash_t*)forhash) < *((hash_t*) revhash) ? *((hash_t*)forhash) : *((hash_t*)revhash));
+            hash_t tmp_fwd = static_cast<uint64_t>(forhash[0]) << 32 | forhash[1];
+            hash_t tmp_rev = static_cast<uint64_t>(revhash[0]) << 32 | revhash[1];
+            *fin_hash = (tmp_fwd < tmp_rev ? tmp_fwd : tmp_rev);
         }
         else{
             *forhash = 0;
@@ -248,8 +254,8 @@ namespace mkmh{
     /* Calculate the 64-bit hash for a string defined by seq and the length of seq */
     inline hash_t calc_hash(const char* seq, int seqlen){
         char* reverse = new char[seqlen];
-        hash_t* fhash = new hash_t [4];
-        hash_t* rhash = new hash_t [4];
+        uint32_t* fhash = new uint32_t [4];
+        uint32_t* rhash = new uint32_t [4];
         hash_t* fin_hash = new hash_t [1];
         calc_hash(seq, seqlen, reverse, fhash, rhash, fin_hash);
         hash_t ret = *(fin_hash);
@@ -292,8 +298,11 @@ namespace mkmh{
                 reverse_complement(seq + i, reverse, k);
                 MurmurHash3_x64_128(seq + i, k, 42, fhash);
                 MurmurHash3_x64_128(reverse, k, 42, rhash);
-                hash_t tmp_fwd = *((hash_t*) fhash);
-                hash_t tmp_rev = *((hash_t*) rhash);
+                //hash_t tmp_fwd = *((hash_t*) fhash);
+                //hash_t tmp_rev = *((hash_t*) rhash);
+                hash_t tmp_fwd = static_cast<uint64_t>(fhash[0]) << 32 | fhash[1];
+                hash_t tmp_rev = static_cast<uint64_t>(rhash[0]) << 32 | rhash[1];
+
                 hashes[i] = (tmp_fwd < tmp_rev ? tmp_fwd : tmp_rev);
             }
             else{
@@ -346,8 +355,12 @@ namespace mkmh{
                 reverse_complement(seq + i, reverse, k);
                 MurmurHash3_x64_128(seq + i, k, 42, fhash);
                 MurmurHash3_x64_128(reverse, k, 42, rhash);
-                hash_t tmp_fwd = *((hash_t*) fhash);
-                hash_t tmp_rev = *((hash_t*) rhash);
+                //hash_t tmp_fwd = *((hash_t*) fhash);
+                //hash_t tmp_rev = *((hash_t*) rhash);
+                hash_t tmp_fwd = static_cast<uint64_t>(fhash[0]) << 32 | fhash[1];
+                hash_t tmp_rev = static_cast<uint64_t>(rhash[0]) << 32 | rhash[1];
+
+
                 hashes[i] = (tmp_fwd < tmp_rev ? tmp_fwd : tmp_rev);
                 htc->increment(hashes[i]);
             }

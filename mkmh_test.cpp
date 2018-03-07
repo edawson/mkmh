@@ -98,6 +98,11 @@ TEST_CASE("Calc_hashes functions produce the right hashes", "[calc_hashes]"){
         hash_t* h;
         int numhashes;
         calc_hashes((const char*) o, 7, 4, h, numhashes);
+
+        for (int i = 0; i < numhashes; i++){
+
+            cerr << string(o + i , o + i + 4) << " : " << *(h + i) << " : " <<  calc_hash(o + i, 4) << endl; 
+        }
     
         bool trip = false;
         for (int i = 0; i < 7 - 4; i++){
