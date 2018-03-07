@@ -473,6 +473,29 @@ namespace mkmh{
         
     };
 
+    inline void hash_set_intersection_size(const hash_t* alpha, const int& alpha_size, const hash_t* beta, const int& beta_size, int& ret){
+        int a_ind = 0;
+        int b_ind = 0;
+        ret = 0;
+        hash_t prev = 0;
+        while (a_ind < alpha_size && b_ind < beta_size){
+            if (alpha[a_ind] == beta[b_ind] && alpha[a_ind] != prev){
+                ++ret;
+                prev = alpha[a_ind];
+                ++a_ind;
+                ++b_ind;
+                
+            }
+            else if (alpha[a_ind] > beta[b_ind]){
+                ++b_ind;
+            }
+            else{
+                ++a_ind;
+            }
+        }
+        
+    };
+
     /** Calculate a MinHash sketch for kmers length (2 * k) with skip bases in between the two k-length halves **/
     vector<hash_t> allhash_64_linkmer(string seq, int k, int skip = 0);
 
