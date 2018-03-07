@@ -627,6 +627,51 @@ namespace mkmh{
 
     /** Return the intersection of two lists of kmers **/
     vector<string> kmer_intersection(vector<string> alpha, vector<string> beta);
+
+
+    // Hold a buffer of bufsz kmers and pass that to the stringstream
+    inline void print_kmers(char* seq, const int& len, int k, char* opt_char = NULL){
+        int kmerized_length = len - k;
+        stringstream st;
+
+        char* buf = new char[(k+1)];
+        buf[k] = '\0';
+
+        if (opt_char != NULL){
+            st << opt_char << '\t';
+        }
+        for (int i = 0; i < kmerized_length - 1; ++i){
+            int j = 0;
+            while (j < k){
+                buf[j] = seq[i + j];
+                ++j;
+            }
+             st << buf << '\t';
+        }
+        int j = 0;
+        while(j < k){
+            buf[j] = seq[kmerized_length - 1 + j];
+            ++j;
+        }
+        st << buf;
+        st << endl;
+        cout << st.str();
+        delete [] buf;
+    };
+
+    inline void print_hashes(hash_t* hashes, const int& numhashes, char* opt_char = NULL){
+        stringstream st;
+
+        if (opt_char != NULL){
+            st << opt_char << '\t';
+        }
+        for (int i = 0; i < numhashes - 1; ++i){
+            st << hashes[i] << '\t';
+        }
+        st << hashes[numhashes - 1] << endl;
+        cout << st.str();
+    };
+
 }
 
 #endif

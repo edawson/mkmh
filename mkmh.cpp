@@ -100,22 +100,25 @@ namespace mkmh{
         delete reverse;
     }
 
-
     void print_kmers(char* seq, const int& len, int k){
         int kmerized_length = len - k;
+        stringstream st;
         for (int i = 0; i < kmerized_length - 1; ++i){
             int j = 0;
             while (j < k){
-                cout << seq[i + j];
+                st << seq[i + j];
                 ++j;
             }
-            cout << "\t";
+            st << "\t";
         }
         int j = 0;
         while(j < k){
-            cout << seq[kmerized_length - 1 + j];
+            st << seq[kmerized_length - 1 + j];
             ++j;
         }
+        st << endl;
+        cout << st.str();
+        st.str("");
     }
 
     vector<string> multi_kmerize(string seq, vector<int> kSizes){
