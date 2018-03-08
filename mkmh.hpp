@@ -167,8 +167,13 @@ namespace mkmh{
         }
     };
 
-    inline void sort(vector<hash_t>& hashes){
+    inline void sort(vector<hash_t>& hashes, bool descending = false){
+        if (!descending){
         std::sort(hashes.begin(), hashes.end());
+        }
+        else{
+        std::sort(hashes.begin(), hashes.end(), std::less<uint64_t>());
+        }
     };
 
 
@@ -505,16 +510,17 @@ namespace mkmh{
 
     /** MinHash - given an array of hashes, modify the mins array to hold 
      * the lowest/highest N (excluding zeros) **/
-    inline void minhashes(hash_t* hashes, int num_hashes,
+    inline void minhashes(hash_t*& hashes, int num_hashes,
              int sketch_size,
              hash_t*& ret,
              int& retsize,
             bool use_bottom=true){
         
-        ret = new hash_t[sketch_size];
+        int maxlen = min(num_hashes, sketch_size);
+        ret = new hash_t[maxlen];
+        retsize = 0;
         mkmh::sort(hashes, num_hashes, !use_bottom);
 
-        int maxlen = min(num_hashes, sketch_size);
         int start = 0;
         while (retsize < sketch_size && start < num_hashes){
             if (hashes[start] != 0){
