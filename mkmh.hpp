@@ -624,10 +624,44 @@ namespace mkmh{
     /* Returns the intersection of both sets. Duplicates are included only once */
     vector<hash_t> hash_set_intersection(vector<hash_t> alpha, vector<hash_t> beta);
 
+
+    inline void percent_identity(const hash_t* alpha, const int len,
+        const hash_t* ref, const int reflen, double& ret){
+            int shared = 0;
+            hash_intersection_size(alpha, len, ref, reflen, shared);
+            ret =  (double) shared / (double) len;
+    };
+
+    inline void sort_by_similarity(const hash_t* alpha, const int len,
+        const vector<string>& refnames, int numrefs,
+        const vector<hash_t*>& refhashes, const vector<int>& reflens,
+        vector<string>& ret_names, vector<double>& ret_sims){
+
+            ret_names.resize(numrefs);
+            ret_sims.resize(numrefs);
+            
+            vector<pair<int, double>> helper_vec(numrefs);
+            for (int i = 0; i < numrefs; ++i){
+                double r = 0;
+                percent_identity(alpha, len, refhashes[i], reflens[i], r);
+                helper_vec[i] = std::make_pair(i, r);
+            }
+            sort( helper_vec.begin( ), helper_vec.end( ), [ ]( const pair<int, double>& lhs, const pair<int, double>& rhs )
+            {
+                return lhs.second > rhs.second;
+            });
+
+            for (int i = 0; i < numrefs; ++i){
+                ret_names[i] = refnames[helper_vec[i].first];
+                ret_sims[i] = helper_vec[i].second;
+            }
+
+    };
     /* Returns two vectors, one of sequence names and one of percent similarity, sorted by percent similarity to alpha.
      * NB: input vectors should be sorted. */
     tuple<vector<string>, vector<double>> sort_by_similarity(vector<hash_t> alpha, vector<vector<hash_t>> comps, vector<string> comp_names);
 
+    //inline void sort_by_similarity(hash_t* alpha, int hashnum, hash_t** comps, int* comp_nums, vector<char*> comp_names)
     /** Return the intersection of two kmer heaps **/
     priority_queue<string> kmer_heap_intersection(priority_queue<string> alpha, priority_queue<string> beta);
 
