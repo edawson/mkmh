@@ -463,7 +463,7 @@ namespace mkmh{
         int b_ind = 0;
         ret = 0;
         while (a_ind < alpha_size && b_ind < beta_size){
-            if (alpha[a_ind] == beta[b_ind]){
+            if (alpha[a_ind] == beta[b_ind] && alpha[a_ind] != 0){
                 ++ret;
                 ++a_ind;
                 ++b_ind;
@@ -484,7 +484,7 @@ namespace mkmh{
         ret = 0;
         hash_t prev = 0;
         while (a_ind < alpha_size && b_ind < beta_size){
-            if (alpha[a_ind] == beta[b_ind] && alpha[a_ind] != prev){
+            if (alpha[a_ind] == beta[b_ind] && alpha[a_ind] != prev && alpha[a_ind] != 0){
                 ++ret;
                 prev = alpha[a_ind];
                 ++a_ind;
@@ -507,6 +507,19 @@ namespace mkmh{
     /* Returns the forward shingles of all k sizes of a sequence */
     /* Shingles are just forward-only kmers */
     vector<string> multi_shingle(string seq, vector<int> k);
+
+    /** Mask (by converting to zero) hashes that don't satisfy min_occ <= frequency(h) <= max_occ **/
+    inline void mask_by_frequency(hash_t*& hashes, const int& num_hashes,
+        HASHTCounter* htc,
+        int min_occ = 0,
+        uint32_t max_occ = UINT32_MAX){
+            
+            for (int i = 0; i < num_hashes; ++i){
+                int freq = 0;
+                htc->get(hashes[i], freq);
+                hashes[i] = (min_occ <= freq && freq <= max_occ) ? hashes[i] : 0;
+            }
+    };
 
     /** MinHash - given an array of hashes, modify the mins array to hold 
      * the lowest/highest N (excluding zeros) **/
@@ -539,7 +552,7 @@ namespace mkmh{
              int& retsize,
              HASHTCounter* htc,
              int min_occ = 0,
-             int max_occ = 0,
+             uint32_t max_occ = UINT32_MAX,
             bool use_bottom=true){
         
         ret = new hash_t[sketch_size];

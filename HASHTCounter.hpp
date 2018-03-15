@@ -21,10 +21,10 @@ namespace mkmh{
         ~HASHTCounter();
         int& operator[](hash_t key);
 
-        void increment(hash_t key);
+        void increment(const hash_t& key);
         void bulk_increment(hash_t* h, int num);
 
-        int& get(hash_t key);
+        int& get(const hash_t& key);
 
         void get(const hash_t& key, int& ret);
 

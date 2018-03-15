@@ -43,7 +43,7 @@ namespace mkmh{
         }
     }
 
-    void HASHTCounter::increment(hash_t key){
+    void HASHTCounter::increment(const hash_t& key){
         //cout << (++counts [ key % my_size ]) << endl;
         #pragma omp atomic update
         ++(counts[ key % static_cast<uint64_t>( my_size ) ]);
@@ -63,7 +63,7 @@ namespace mkmh{
         }
     }
 
-    int& HASHTCounter::get(hash_t key){
+    int& HASHTCounter::get(const hash_t& key){
         return (counts[ key % static_cast<uint64_t>(my_size) ]);
     }
 
