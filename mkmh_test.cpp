@@ -206,7 +206,7 @@ TEST_CASE("hash_intersection family of functions work correctly", "[hash_interse
 
     SECTION("fastest hash-intersection works"){
         hash_intersection_size(x, 4, y, 6, num);
-        REQUIRE(num == 3);
+        REQUIRE(num == 2);
     }
 
 }
