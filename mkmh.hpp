@@ -655,7 +655,7 @@ namespace mkmh{
             
             vector<pair<int, double>> helper_vec(numrefs);
             for (int i = 0; i < numrefs; ++i){
-                double r = 0;
+                double r = 0.0;
                 percent_identity(alpha, len, refhashes[i], reflens[i], r);
                 helper_vec[i] = std::make_pair(i, r);
             }
