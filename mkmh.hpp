@@ -118,7 +118,7 @@ namespace mkmh{
         char* ret = new char[seqlen];
         reverse_complement(s, ret, seqlen);
         string s_revc(ret);
-        delete ret;
+        delete [] ret;
 
         return s_revc;
     };
@@ -267,6 +267,7 @@ namespace mkmh{
         hash_t* fin_hash = new hash_t [1];
         calc_hash(seq, seqlen, reverse, fhash, rhash, fin_hash);
         hash_t ret = *(fin_hash);
+        delete [] reverse;
         delete [] fhash;
         delete [] rhash;
         delete [] fin_hash;
@@ -318,7 +319,7 @@ namespace mkmh{
             }
 
         }
-        delete reverse;
+        delete [] reverse;
     };
 
     /** calc_hashes for multiple kmers sizes **/
@@ -368,7 +369,6 @@ namespace mkmh{
                 hash_t tmp_fwd = static_cast<uint64_t>(fhash[0]) << 32 | fhash[1];
                 hash_t tmp_rev = static_cast<uint64_t>(rhash[0]) << 32 | rhash[1];
 
-
                 hashes[i] = (tmp_fwd < tmp_rev ? tmp_fwd : tmp_rev);
                 htc->increment(hashes[i]);
             }
@@ -377,7 +377,7 @@ namespace mkmh{
             }
 
         }
-        delete reverse;
+        delete [] reverse;
     }
 
     inline void calc_hashes(const char* seq, int seq_length,
@@ -399,7 +399,8 @@ namespace mkmh{
         for (int i = 0; i < kmer_sizes.size(); ++i){
             int k = kmer_sizes[i];
             int local_numhash;
-            hash_t* l_start = hashes + offsets[i];
+            //hash_t* l_start = hashes + offsets[i];
+            hash_t* l_start;
             // HTC gets incremented within this function, so no need to do a bulk increment.
             calc_hashes(seq, seq_length, k, l_start, local_numhash, htc);
             memcpy(hashes + offsets[i], l_start, local_numhash * sizeof(hash_t));
@@ -444,11 +445,11 @@ namespace mkmh{
      *  hashes can be kept or removed based on the number of times
      *  they occur in seq.
      **/
-    void calc_hashes(const char* seq, const int& len,
-            const int& k, hash_t*& hashes, int& numhashes, HASHTCounter*& htc);
+    // void calc_hashes(const char* seq, const int& len,
+    //         const int& k, hash_t*& hashes, int& numhashes, HASHTCounter*& htc);
     
-    void calc_hashes(const char* seq, const int& len,
-            const int& k, hash_t*& hashes, int& numhashes, unordered_map<hash_t, int> counts);
+    // void calc_hashes(const char* seq, const int& len,
+    //         const int& k, hash_t*& hashes, int& numhashes, unordered_map<hash_t, int> counts);
     
     /** Calculate the hashes for kmers of multiple lengths in <kmer>
     */
@@ -670,6 +671,38 @@ namespace mkmh{
             }
 
     };
+
+    inline void sort_by_similarity(const hash_t* alpha, const int len,
+        const vector<string>& refnames, int numrefs,
+        const vector<hash_t*>& refhashes, const vector<int>& reflens,
+        vector<string>& ret_names, vector<double>& ret_sims,
+        vector<int>& intersection_sizes){
+
+            ret_names.resize(numrefs);
+            ret_sims.resize(numrefs);
+            intersection_sizes.resize(numrefs);
+            
+            vector<pair<int, int>> helper_vec(numrefs);
+            
+            for (int i = 0; i < numrefs; ++i){
+                int shared = 0;
+                hash_intersection_size(alpha, len, refhashes[i], reflens[i], shared);
+                helper_vec[i] = std::make_pair(i, shared);
+            }
+            sort( helper_vec.begin( ), helper_vec.end( ), [ ]( const pair<int, int>& lhs, const pair<int, int>& rhs )
+            {
+                return lhs.second > rhs.second;
+            });
+
+            for (int i = 0; i < numrefs; ++i){
+                ret_names[i] = refnames[helper_vec[i].first];
+                intersection_sizes[i] = helper_vec[i].second;
+                ret_sims[i] = (double) helper_vec[i].second / (double) len;
+
+            }
+
+    };
+
     /* Returns two vectors, one of sequence names and one of percent similarity, sorted by percent similarity to alpha.
      * NB: input vectors should be sorted. */
     tuple<vector<string>, vector<double>> sort_by_similarity(vector<hash_t> alpha, vector<vector<hash_t>> comps, vector<string> comp_names);
