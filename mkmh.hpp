@@ -15,6 +15,7 @@
 #include <assert.h>
 #include <omp.h>
 #include <assert.h>
+#include <bitset>
 
 #include "murmur3.hpp"
 #include "HASHTCounter.hpp"
@@ -65,6 +66,23 @@ namespace mkmh{
         1,1,1,1,1,1 
     };
 
+    static const int DNA_base_index[127] = {
+        4,
+        4,4,4,4,4,4,4,4,4,4,
+        4,4,4,4,4,4,4,4,4,4,
+        4,4,4,4,4,4,4,4,4,4,
+        4,4,4,4,4,4,4,4,4,4,
+        4,4,4,4,4,4,4,4,4,4,
+        4,4,4,4,4,4,4,4,4,4,
+        4,4,4,4,0,4,1,4,4,4,
+        2,4,4,4,4,4,4,4,4,4,
+        4,4,4,3,4,4,4,4,4,4,
+        4,4,4,4,4,4,0,4,1,4,
+        4,4,2,4,4,4,4,4,4,4,
+        4,4,4,4,4,3,4,4,4,4,
+        4,4,4,4,4,4
+    };
+
     // Reverse complement lookup table
     static char rev_arr [26] = {
         84, 66, 71, 68, 69,
@@ -99,12 +117,12 @@ namespace mkmh{
      * */
 
     inline void reverse_complement(const char* seq, char* ret, int len){
-        
+
         //assert(seq != ret);
         if (ret == NULL){
             ret = new char[len+1];
         }
-        
+
         for (int i = len - 1; i >=0; i--){
             ret[ len - 1 - i ] = (char) rev_arr[ (int) seq[i] - 65];
         }
@@ -160,7 +178,7 @@ namespace mkmh{
 
     inline void sort(hash_t*& hashes, int len, bool descending = false){
         if (!descending){
-           std::sort(hashes, hashes + len);
+            std::sort(hashes, hashes + len);
         }else{
             std::sort(hashes, hashes + len, std::less<uint64_t>());
 
@@ -169,10 +187,10 @@ namespace mkmh{
 
     inline void sort(vector<hash_t>& hashes, bool descending = false){
         if (!descending){
-        std::sort(hashes.begin(), hashes.end());
+            std::sort(hashes.begin(), hashes.end());
         }
         else{
-        std::sort(hashes.begin(), hashes.end(), std::less<uint64_t>());
+            std::sort(hashes.begin(), hashes.end(), std::less<uint64_t>());
         }
     };
 
@@ -200,8 +218,48 @@ namespace mkmh{
     /* Returns a heap (priority queue) of the kmers of the read */
     priority_queue<string> kmer_heap(string seq, vector<int> k);
 
+    const static int first_bits[5] = {0,0,1,1,0};
+    const static int second_bits[5] = {1,0,0,1,0};
     /* Converts a string kmer to an integer representation */
-    //hash_t kmer_to_integer(string kmer);
+    inline bool kmer_to_integer(char* kmer, int length, hash_t*& h){
+        assert(length < 31);
+        *h = 0;
+        std::bitset<64> rb;
+        int bit = -1;
+        for (int i = 0; i < length; ++i){
+            int index = DNA_base_index[kmer[i]];
+            if (index == 4){
+                *h = 0;
+                return false;
+            }
+            ++bit;
+            rb.set(63 - bit, first_bits[index]); 
+            ++bit;
+            rb.set(63 - bit, second_bits[index]);
+        }
+        *h = rb.to_ullong();
+        return true;
+    }
+
+    inline bool kmer_to_integer(char* kmer, int length, hash_t& h){
+        assert(length < 31);
+        h = 0;
+        std::bitset<64> rb;
+        int bit = -1;
+        for (int i = 0; i < length; ++i){
+            int index = DNA_base_index[kmer[i]];
+            if (index == 4){
+                h = 0;
+                return false;
+            }
+            ++bit;
+            rb.set(63 - bit, first_bits[index]); 
+            ++bit;
+            rb.set(63 - bit, second_bits[index]);
+        }
+        h = rb.to_ullong();
+        return true;
+    }
 
     /* Returns a deduplicated set of kmers or hashes as a vector<T> */
     template<typename T>
@@ -327,8 +385,8 @@ namespace mkmh{
      * to those of the previous kmer size
      **/
     inline void calc_hashes(const char* seq, int seq_length,
-     vector<int> kmer_sizes,
-     hash_t*& hashes, int& numhashes){
+            vector<int> kmer_sizes,
+            hash_t*& hashes, int& numhashes){
         numhashes = 0;
 
         // This holds the number of hashes preceeding the
@@ -381,10 +439,10 @@ namespace mkmh{
     }
 
     inline void calc_hashes(const char* seq, int seq_length,
-     vector<int> kmer_sizes,
-     hash_t*& hashes, int& numhashes,
-      HASHTCounter*& htc){
-        
+            vector<int> kmer_sizes,
+            hash_t*& hashes, int& numhashes,
+            HASHTCounter*& htc){
+
         numhashes = 0;
 
         // This holds the number of hashes preceeding the
@@ -430,7 +488,7 @@ namespace mkmh{
         int l = seq.length();
         return calc_hashes(x, l, k);
     }
-    
+
     inline vector<hash_t> calc_hashes(const char* seq, const int& len, const vector<int>& k_sizes){
         vector<hash_t> ret;
         for (auto k : k_sizes){
@@ -447,10 +505,10 @@ namespace mkmh{
      **/
     // void calc_hashes(const char* seq, const int& len,
     //         const int& k, hash_t*& hashes, int& numhashes, HASHTCounter*& htc);
-    
+
     // void calc_hashes(const char* seq, const int& len,
     //         const int& k, hash_t*& hashes, int& numhashes, unordered_map<hash_t, int> counts);
-    
+
     /** Calculate the hashes for kmers of multiple lengths in <kmer>
     */
     inline vector<hash_t> calc_hashes(string seq, const vector<int>& k_sizes){
@@ -476,7 +534,7 @@ namespace mkmh{
                 ++a_ind;
             }
         }
-        
+
     };
 
     inline void hash_set_intersection_size(const hash_t* alpha, const int& alpha_size, const hash_t* beta, const int& beta_size, int& ret){
@@ -490,7 +548,7 @@ namespace mkmh{
                 prev = alpha[a_ind];
                 ++a_ind;
                 ++b_ind;
-                
+
             }
             else if (alpha[a_ind] > beta[b_ind]){
                 ++b_ind;
@@ -499,7 +557,7 @@ namespace mkmh{
                 ++a_ind;
             }
         }
-        
+
     };
 
     /** Calculate a MinHash sketch for kmers length (2 * k) with skip bases in between the two k-length halves **/
@@ -511,25 +569,25 @@ namespace mkmh{
 
     /** Mask (by converting to zero) hashes that don't satisfy min_occ <= frequency(h) <= max_occ **/
     inline void mask_by_frequency(hash_t*& hashes, const int& num_hashes,
-        HASHTCounter* htc,
-        int min_occ = 0,
-        uint32_t max_occ = UINT32_MAX){
-            
-            for (int i = 0; i < num_hashes; ++i){
-                int freq = 0;
-                htc->get(hashes[i], freq);
-                hashes[i] = (min_occ <= freq && freq <= max_occ) ? hashes[i] : 0;
-            }
+            HASHTCounter* htc,
+            int min_occ = 0,
+            uint32_t max_occ = UINT32_MAX){
+
+        for (int i = 0; i < num_hashes; ++i){
+            int freq = 0;
+            htc->get(hashes[i], freq);
+            hashes[i] = (min_occ <= freq && freq <= max_occ) ? hashes[i] : 0;
+        }
     };
 
     /** MinHash - given an array of hashes, modify the mins array to hold 
      * the lowest/highest N (excluding zeros) **/
     inline void minhashes(hash_t*& hashes, int num_hashes,
-             int sketch_size,
-             hash_t*& ret,
-             int& retsize,
+            int sketch_size,
+            hash_t*& ret,
+            int& retsize,
             bool use_bottom=true){
-        
+
         int maxlen = min(num_hashes, sketch_size);
         ret = new hash_t[maxlen];
         retsize = 0;
@@ -546,16 +604,16 @@ namespace mkmh{
     };
 
 
-    
+
     inline void minhashes_frequency_filter(hash_t* hashes, int num_hashes,
-             int sketch_size,
-             hash_t*& ret,
-             int& retsize,
-             HASHTCounter* htc,
-             int min_occ = 0,
-             uint32_t max_occ = UINT32_MAX,
+            int sketch_size,
+            hash_t*& ret,
+            int& retsize,
+            HASHTCounter* htc,
+            int min_occ = 0,
+            uint32_t max_occ = UINT32_MAX,
             bool use_bottom=true){
-        
+
         ret = new hash_t[sketch_size];
         mkmh::sort(hashes, num_hashes, !use_bottom);
 
@@ -572,13 +630,13 @@ namespace mkmh{
     };
 
     inline void minhashes_min_occurrence_filter(hash_t* hashes, int num_hashes,
-             int sketch_size,
-             hash_t*& ret,
-             int& retsize,
-             HASHTCounter* htc,
-             int min_occ = 0,
+            int sketch_size,
+            hash_t*& ret,
+            int& retsize,
+            HASHTCounter* htc,
+            int min_occ = 0,
             bool use_bottom=true){
-        
+
         ret = new hash_t[sketch_size];
         mkmh::sort(hashes, num_hashes, !use_bottom);
 
@@ -641,66 +699,66 @@ namespace mkmh{
 
 
     inline void percent_identity(const hash_t* alpha, const int len,
-        const hash_t* ref, const int reflen, double& ret){
+            const hash_t* ref, const int reflen, double& ret){
+        int shared = 0;
+        hash_intersection_size(alpha, len, ref, reflen, shared);
+        ret =  (double) shared / (double) len;
+    };
+
+    inline void sort_by_similarity(const hash_t* alpha, const int len,
+            const vector<string>& refnames, int numrefs,
+            const vector<hash_t*>& refhashes, const vector<int>& reflens,
+            vector<string>& ret_names, vector<double>& ret_sims){
+
+        ret_names.resize(numrefs);
+        ret_sims.resize(numrefs);
+
+        vector<pair<int, double>> helper_vec(numrefs);
+        for (int i = 0; i < numrefs; ++i){
+            double r = 0.0;
+            percent_identity(alpha, len, refhashes[i], reflens[i], r);
+            helper_vec[i] = std::make_pair(i, r);
+        }
+        sort( helper_vec.begin( ), helper_vec.end( ), [ ]( const pair<int, double>& lhs, const pair<int, double>& rhs )
+                {
+                return lhs.second > rhs.second;
+                });
+
+        for (int i = 0; i < numrefs; ++i){
+            ret_names[i] = refnames[helper_vec[i].first];
+            ret_sims[i] = helper_vec[i].second;
+        }
+
+    };
+
+    inline void sort_by_similarity(const hash_t* alpha, const int len,
+            const vector<string>& refnames, int numrefs,
+            const vector<hash_t*>& refhashes, const vector<int>& reflens,
+            vector<string>& ret_names, vector<double>& ret_sims,
+            vector<int>& intersection_sizes){
+
+        ret_names.resize(numrefs);
+        ret_sims.resize(numrefs);
+        intersection_sizes.resize(numrefs);
+
+        vector<pair<int, int>> helper_vec(numrefs);
+
+        for (int i = 0; i < numrefs; ++i){
             int shared = 0;
-            hash_intersection_size(alpha, len, ref, reflen, shared);
-            ret =  (double) shared / (double) len;
-    };
-
-    inline void sort_by_similarity(const hash_t* alpha, const int len,
-        const vector<string>& refnames, int numrefs,
-        const vector<hash_t*>& refhashes, const vector<int>& reflens,
-        vector<string>& ret_names, vector<double>& ret_sims){
-
-            ret_names.resize(numrefs);
-            ret_sims.resize(numrefs);
-            
-            vector<pair<int, double>> helper_vec(numrefs);
-            for (int i = 0; i < numrefs; ++i){
-                double r = 0.0;
-                percent_identity(alpha, len, refhashes[i], reflens[i], r);
-                helper_vec[i] = std::make_pair(i, r);
-            }
-            sort( helper_vec.begin( ), helper_vec.end( ), [ ]( const pair<int, double>& lhs, const pair<int, double>& rhs )
-            {
+            hash_intersection_size(alpha, len, refhashes[i], reflens[i], shared);
+            helper_vec[i] = std::make_pair(i, shared);
+        }
+        sort( helper_vec.begin( ), helper_vec.end( ), [ ]( const pair<int, int>& lhs, const pair<int, int>& rhs )
+                {
                 return lhs.second > rhs.second;
-            });
+                });
 
-            for (int i = 0; i < numrefs; ++i){
-                ret_names[i] = refnames[helper_vec[i].first];
-                ret_sims[i] = helper_vec[i].second;
-            }
+        for (int i = 0; i < numrefs; ++i){
+            ret_names[i] = refnames[helper_vec[i].first];
+            intersection_sizes[i] = helper_vec[i].second;
+            ret_sims[i] = (double) helper_vec[i].second / (double) len;
 
-    };
-
-    inline void sort_by_similarity(const hash_t* alpha, const int len,
-        const vector<string>& refnames, int numrefs,
-        const vector<hash_t*>& refhashes, const vector<int>& reflens,
-        vector<string>& ret_names, vector<double>& ret_sims,
-        vector<int>& intersection_sizes){
-
-            ret_names.resize(numrefs);
-            ret_sims.resize(numrefs);
-            intersection_sizes.resize(numrefs);
-            
-            vector<pair<int, int>> helper_vec(numrefs);
-            
-            for (int i = 0; i < numrefs; ++i){
-                int shared = 0;
-                hash_intersection_size(alpha, len, refhashes[i], reflens[i], shared);
-                helper_vec[i] = std::make_pair(i, shared);
-            }
-            sort( helper_vec.begin( ), helper_vec.end( ), [ ]( const pair<int, int>& lhs, const pair<int, int>& rhs )
-            {
-                return lhs.second > rhs.second;
-            });
-
-            for (int i = 0; i < numrefs; ++i){
-                ret_names[i] = refnames[helper_vec[i].first];
-                intersection_sizes[i] = helper_vec[i].second;
-                ret_sims[i] = (double) helper_vec[i].second / (double) len;
-
-            }
+        }
 
     };
 
@@ -733,7 +791,7 @@ namespace mkmh{
                 buf[j] = seq[i + j];
                 ++j;
             }
-             st << buf << '\t';
+            st << buf << '\t';
         }
         int j = 0;
         while(j < k){

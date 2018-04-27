@@ -210,3 +210,30 @@ TEST_CASE("hash_intersection family of functions work correctly", "[hash_interse
     }
 
 }
+
+TEST_CASE("kmer_to_integer", "[kmer_to_integer]"){
+    char s [8] = "ATAGAAA";
+    char s_p [8] = "ATAGAAA";
+    char non_s [13] = "ATAGAATTTTAA";
+    char fail [12] = "ATAGANNNNAA";
+
+    hash_t* z = new hash_t[1];
+    hash_t* z_p = new hash_t[1];
+    hash_t x;
+
+    bool r = kmer_to_integer(s, 7, z[0]);
+    kmer_to_integer(s_p, 7, z_p[0]);
+    bool shouldfail = kmer_to_integer(fail, 11, x);
+    hash_t nonz;
+
+    kmer_to_integer(non_s, 12, nonz);
+    REQUIRE(shouldfail == false);
+    REQUIRE(x == 0);
+    //cout << (hash_t) z << endl;
+    REQUIRE(r == true);
+    REQUIRE(z[0] == z_p[0]);
+    REQUIRE(nonz != z[0]);
+
+    delete [] z;
+    delete [] z_p;
+}
