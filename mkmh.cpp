@@ -18,7 +18,6 @@ namespace mkmh{
         //priority_queue<string> ret(base.begin(), base.end());
         for (auto k : kmer){
             vector<string> outmers(seq.length() - k, "");
-            #pragma omp parallel for
             for (int i = 0; i < seq.length() - k; i++){
                 string forward = seq.substr(i, k);
                 string revrev = reverse(reverse_complement(forward));
@@ -74,21 +73,52 @@ namespace mkmh{
         }
     }
 
+    // void calc_hashes(const char* seq, const int& len,
+    //         const int& k, hash_t*& hashes, int& numhashes, unordered_map<hash_t, int> counts){
+    //     char* reverse = new char[k];
+    //     uint32_t rhash[4];
+    //     uint32_t fhash[4];
+    //     //hash_t tmp_fwd;
+    //     //hash_t tmp_rev;
+    //     numhashes = len - k;
+    //     hashes = new hash_t[numhashes];
+    //     for (int i = 0; i < numhashes; ++i){
+    //         if (canonical(seq + i, k)){
+    //             reverse_complement(seq + i, reverse, k);
+    //             MurmurHash3_x64_128(seq + i, k, 42, fhash);
+    //             MurmurHash3_x64_128(reverse, k, 42, rhash);
+    //             hash_t tmp_fwd = *((hash_t*) fhash);
+    //             hash_t tmp_rev = *((hash_t*) rhash);
+    //             hashes[i] = (tmp_fwd < tmp_rev ? tmp_fwd : tmp_rev);
+    //             counts[hashes[i]] += 1;
+    //         }
+    //         else{
+    //             hashes[i] = 0;
+    //         }
+
+    //     }
+    //     delete reverse;
+    // }
+
     void print_kmers(char* seq, const int& len, int k){
         int kmerized_length = len - k;
+        stringstream st;
         for (int i = 0; i < kmerized_length - 1; ++i){
             int j = 0;
             while (j < k){
-                cout << seq[i + j];
+                st << seq[i + j];
                 ++j;
             }
-            cout << "\t";
+            st << "\t";
         }
         int j = 0;
         while(j < k){
-            cout << seq[kmerized_length - 1 + j];
+            st << seq[kmerized_length - 1 + j];
             ++j;
         }
+        st << endl;
+        cout << st.str();
+        st.str("");
     }
 
     vector<string> multi_kmerize(string seq, vector<int> kSizes){
@@ -197,64 +227,6 @@ namespace mkmh{
             }
         }
         return ret;
-    }
-
-    // vector<hash_t> preserve_kmer_mh64(string seq, vector<int> kSizes, int hashSize);
-    vector<hash_t> allhash_unsorted_64(string& seq, vector<int>& k){
-        int seqlen = seq.length();
-        return allhash_unsorted_64_fast(seq.c_str(), k);
-
-    }
-
-    vector<hash_t> minhash_64_fast(string seq, vector<int> kmer, int hashSize, bool useBottom){
-        vector<hash_t> ret;
-        //ret.reserve(seq.length() * kmer.size());
-        for (auto k : kmer){
-            vector<hash_t> tmp = calc_hashes(seq, k);
-            ret.insert(ret.end(), tmp.begin(), tmp.end());
-        }
-        std::sort(ret.begin(), ret.end());
-        
-        int nonzero_ind = 0;
-        while (ret[nonzero_ind] == 0){
-            nonzero_ind++;
-        }
-        hashSize += nonzero_ind;
-
-        int hashmax = hashSize < ret.size() ? hashSize : ret.size() - 1 ;
-
-        return useBottom ?
-            vector<hash_t> (ret.begin() + nonzero_ind, ret.begin() + hashmax) :
-            vector<hash_t> (ret.rbegin() + nonzero_ind, ret.rbegin() + hashmax);
-    }
-
-
-
-
-    vector<hash_t> allhash_unsorted_64_fast(const char* seq, vector<int>& kmer){
-        vector<hash_t> ret;
-        ret.reserve(strlen(seq) * kmer.size());
-        for (auto k : kmer){
-            vector<hash_t> tmp = calc_hashes(seq, k);
-            ret.insert(ret.end(), tmp.begin(), tmp.end());
-        }
-        return ret;
-    }
-
-
-    tuple<hash_t*, int> allhash_unsorted_64_fast(const char* seq, int& seqlen, vector<int>& k_sizes){
-        hash_t* ret;
-        int ret_size = 0;
-
-        vector<hash_t> cont;
-        for (auto i : k_sizes){
-            vector<hash_t> hashes = calc_hashes(seq, seqlen, i);
-            cont.insert(cont.end(), hashes.begin(), hashes.end());
-        }
-        ret = &(*cont.begin());
-        ret_size = cont.size();
-        return std::make_tuple(ret, ret_size);
-
     }
 
 
@@ -533,14 +505,14 @@ namespace mkmh{
         vector<pair<int, double>> helper_vec;
 
         for (int i = 0; i < comps.size(); ++i){
-            int divisor = comps[i].size();
+            int divisor = alpha.size();
             int shared = hash_intersection(alpha, comps[i]).size();
             double pct_id = (double) shared / (double) divisor;
             helper_vec.push_back(make_pair(i, pct_id));
         }
         sort( helper_vec.begin( ), helper_vec.end( ), [ ]( const pair<int, double>& lhs, const pair<int, double>& rhs )
         {
-            return lhs.second < rhs.second;
+            return lhs.second > rhs.second;
         });
         
         for (int i = 0; i < helper_vec.size(); i++){
