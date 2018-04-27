@@ -620,7 +620,8 @@ namespace mkmh{
         int maxlen = min(num_hashes, sketch_size);
         int start = 0;
         while (retsize < sketch_size && start < num_hashes){
-            if (hashes[start] != 0 && htc->get(hashes[start]) <= max_occ && htc->get(hashes[start]) >= min_occ){
+            int freq = htc->get(hashes[start]);
+            if (hashes[start] != 0 && freq <= max_occ && freq >= min_occ){
                 ret[retsize] = hashes[start];
                 ++retsize;
             }
