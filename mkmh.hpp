@@ -221,7 +221,7 @@ namespace mkmh{
     const static int first_bits[5] = {0,0,1,1,0};
     const static int second_bits[5] = {1,0,0,1,0};
     /* Converts a string kmer to an integer representation */
-    inline bool kmer_to_integer(char* kmer, int length, hash_t*& h){
+    inline bool kmer_to_integer(const char* kmer, const int& length, hash_t*& h){
         assert(length < 31);
         *h = 0;
         std::bitset<64> rb;
@@ -241,7 +241,7 @@ namespace mkmh{
         return true;
     }
 
-    inline bool kmer_to_integer(char* kmer, int length, hash_t& h){
+    inline bool kmer_to_integer(const char* kmer, const int& length, hash_t& h){
         assert(length < 31);
         h = 0;
         std::bitset<64> rb;
