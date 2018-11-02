@@ -48,6 +48,26 @@ namespace mkmh{
         bool operator<(const mkmh_minimizer& rhs) const {return seq < rhs.seq;};
     };
 
+    struct mkmh_hash_vec {
+        hash_t* hashes;
+        uint32_t size;
+        uint32_t capacity;
+        mkmh_hash_vec(uint32_t cap){
+            size = 0;
+            capacity = cap;
+            hashes = new hash_t[capacity];
+        };
+        ~mkmh_hash_vec(){
+            delete [] hashes;
+        };
+        void emplace(const hash_t& h){
+            if (this->size < this->capacity){
+                hashes[this->size - 1] = h;
+                ++(this->size);
+            }
+        };
+    };
+
     // Crazy hack char table to test for canonical bases
     static const int valid_dna[127] = {
         1,
