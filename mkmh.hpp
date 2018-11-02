@@ -201,6 +201,47 @@ namespace mkmh{
 
     mkmh_kmer_list_t kmerize(char* seq, int seq_len, int k);
 
+    inline bool strcompare(const char* a, const int& alen, const char* b, const int& blen){
+        if (alen != blen){
+            return false;
+        }
+
+        for (int i = 0; i < alen; ++i){
+            if (a[i] != b[i]){
+                return false;
+            }
+        }
+
+        return true;
+    };
+
+    inline void count_kmer_occurrence(const char* seq, const int& seq_len, const char* kmer, const int& k, int& count){
+        
+        count = 0;
+        int k_num = seq_len - k;
+        for (int i = 0; i < k_num; ++i){
+            int addit = strcompare((const char*) seq + i, k, kmer, k) ? 1 : 0;
+            count += addit;
+        }
+    };
+
+
+    inline void count_substring_occurrence(const char* seq, const int& seq_len, const char* kmer, const int& k, int& count){
+        
+        count = 0;
+        int s_num = seq_len - k;
+        int i = 0;
+        while (i < s_num){
+            if (strcompare(seq + i, k, kmer, k)){
+                ++count;
+                i = i + k;
+            }
+            else{
+               i += 1; 
+            }
+        }
+    };
+
     void kmerize(char* seq, const int& seq_len, const int& k, char** kmers, int& kmer_num);
 
     /* Print the kmers of a string, tab separated, to cout 
@@ -260,6 +301,25 @@ namespace mkmh{
         h = rb.to_ullong();
         return true;
     }
+
+
+    /**
+     * Thanks to https://stackoverflow.com/questions/39242932/how-to-encode-char-in-2-bits
+     */ 
+    inline uint64_t kmer_to_integer(const char* kmer, const int& length){
+        uint64_t ret = 0;
+        uint64_t retrev = 0;
+
+        char* rev;
+        reverse_complement(kmer, rev, length);
+
+        for (int i = 0; i < length; ++i){
+            ret = (ret << 2) | ((kmer[i] >> 1) & 3);
+            retrev = (retrev << 2) | ((rev[i] >> 1) & 3);
+        }
+
+        return ret < retrev ? ret : retrev;
+    };
 
     /* Returns a deduplicated set of kmers or hashes as a vector<T> */
     template<typename T>
