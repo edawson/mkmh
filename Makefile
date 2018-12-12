@@ -8,8 +8,8 @@ else
 	CXXFLAGS:= -O3 -std=c++11 -fopenmp -mtune=native -ggdb
 endif
 
-LD_LIB_FLAGS:= -Lmurmur3 -L.
-LD_INC_FLAGS:= -I. -Imurmur3
+LD_LIB_FLAGS:= -Lmurmur3 -L. -Lxxhash
+LD_INC_FLAGS:= -I. -Imurmur3 -IxxHash
 
 libmkmh.a: mkmh.o HASHTCounter.o murmur3/libmurmur3.a Makefile
 	ar -rs $@ $< HASHTCounter.o murmur3/libmurmur3.a
@@ -32,16 +32,21 @@ HASHTCounter.o: HASHTCounter.cpp HASHTCounter.hpp
 murmur3/libmurmur3.a:
 	+cd murmur3 && $(MAKE) lib
 
+xxHash/libxxhash.a:
+	+cd xxHash && $(MAKE)
+
 .PHONY: clean clobber
 
 clean:
 	$(RM) *.o
 	$(RM) libmkmh.a
 	cd murmur3 && $(MAKE) clean
+	cd xxHash && $(MAKE) clean
 
 clobber: clean
 	$(RM) libmkmh
 	$(RM) *.a
 	cd murmur3 && $(MAKE) clean
+	cd xxHash && $(MAKE) clean
 	$(RM) test
 	$(RM) example

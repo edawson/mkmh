@@ -33,12 +33,22 @@ namespace mkmh{
         int length;
         int k;
 
+        mkmh_kmer_list_t(){
+
+        };
+
+        mkmh_kmer_list_t(int length, int k){
+            length = length;
+            k = k;
+            kmers = new char*[length];
+        };
+
         ~mkmh_kmer_list_t(){
             for (int i = 0; i < length; ++i){
                 delete [] kmers[i];
             }
             delete [] kmers;
-        }
+        };
     };
 
     struct mkmh_minimizer {
@@ -46,6 +56,26 @@ namespace mkmh{
         uint32_t length;
         string seq;
         bool operator<(const mkmh_minimizer& rhs) const {return seq < rhs.seq;};
+    };
+
+    struct mkmh_hash_vec {
+        hash_t* hashes;
+        uint32_t size;
+        uint32_t capacity;
+        mkmh_hash_vec(uint32_t cap){
+            size = 0;
+            capacity = cap;
+            hashes = new hash_t[capacity];
+        };
+        ~mkmh_hash_vec(){
+            delete [] hashes;
+        };
+        void emplace(const hash_t& h){
+            if (this->size < this->capacity){
+                hashes[this->size - 1] = h;
+                ++(this->size);
+            }
+        };
     };
 
     // Crazy hack char table to test for canonical bases
@@ -196,32 +226,170 @@ namespace mkmh{
 
 
 
-    /* Returns the forward and reverse-reverse complement kmers of a sequence */
-    vector<string> kmerize(string seq, int k);
+    inline void kmerize(char* seq, const int& seq_len, const int& k, char** kmers, int& kmer_num){
+        char** ret = new char*[seq_len - k];
+        kmer_num = seq_len - k;
+        for (int i = 0; i < kmer_num; ++i){
+            ret[i] = new char[ k + 1 ];
+            memcpy(ret[i], seq + i, k);
+        }
+    }
+    /* Returns the forward kmers of a sequence */
+    inline vector<string> kmerize(string seq, int k){
+        vector<string> ret(seq.length() - k, "");
 
-    mkmh_kmer_list_t kmerize(char* seq, int seq_len, int k);
+        #pragma omp parallel for
+        for (int i = 0; i < seq.length() - k; i++){
+            string s = seq.substr(i, k);
+            //#pragma omp atomic read
+            ret[i] = s;
+            //ret.push_back(s);
+            //ret.push_back(reverse(reverse_complement(s)));
+        }
+        return ret;
+    };
 
-    void kmerize(char* seq, const int& seq_len, const int& k, char** kmers, int& kmer_num);
+    inline mkmh_kmer_list_t kmerize(char* seq, int seq_len, int k){
+        mkmh_kmer_list_t ret;
+        ret.kmers = new char*[seq_len - k];
+        ret.k = k;
+        ret.length = seq_len - k;
+
+        for (int i = 0; i < ret.length; ++i){
+            char* km = new char[k + 1];
+            memcpy(km, seq + i, k);
+            ret.kmers[i] = new char[k + 1];
+            ret.kmers[i] = km;
+            ret.kmers[i][k] = '\0';
+        }
+        return ret;
+    };
+
+
+
+    inline bool strcompare(const char* a, const int& alen, const char* b, const int& blen){
+        if (alen != blen){
+            return false;
+        }
+
+        for (int i = 0; i < alen; ++i){
+            if (a[i] != b[i]){
+                return false;
+            }
+        }
+
+        return true;
+    };
+
+    inline void count_kmer_occurrence(const char* seq, const int& seq_len, const char* kmer, const int& k, int& count){
+        
+        count = 0;
+        int k_num = seq_len - k;
+        for (int i = 0; i < k_num; ++i){
+            int addit = strcompare((const char*) seq + i, k, kmer, k) ? 1 : 0;
+            count += addit;
+        }
+    };
+
+
+    inline void count_substring_occurrence(const char* seq, const int& seq_len, const char* kmer, const int& k, int& count){
+        
+        count = 0;
+        int s_num = seq_len - k;
+        int i = 0;
+        while (i < s_num){
+            if (strcompare(seq + i, k, kmer, k)){
+                ++count;
+                i = i + k;
+            }
+            else{
+               i += 1; 
+            }
+        }
+    };
+
+    
 
     /* Print the kmers of a string, tab separated, to cout 
      *   avoids allocating any new memory. */
-    void print_kmers(char* seq, const int& seq_len, int k);
+    inline void print_kmers(char* seq, const int& len, int k){
+        int kmerized_length = len - k;
+        stringstream st;
+        for (int i = 0; i < kmerized_length - 1; ++i){
+            int j = 0;
+            while (j < k){
+                st << seq[i + j];
+                ++j;
+            }
+            st << "\t";
+        }
+        int j = 0;
+        while(j < k){
+            st << seq[kmerized_length - 1 + j];
+            ++j;
+        }
+        st << endl;
+        cout << st.str();
+        st.str("");
+    };
+
 
     /* Returns the forward and reverse-reverse complement kmers for all kmer sizes in k */
-    vector<string> multi_kmerize(string seq, vector<int> k);
+    inline vector<string> multi_kmerize(string seq, vector<int> kSizes){
+        int i = 0;
+        vector<string> ret;
+        //ret.reserve(kSizes.size() * 1000);
+        for (auto k : kSizes){
+            vector<string> kmers = kmerize(seq, k);
+            ret.reserve(ret.size() + kmers.size());
+            ret.insert(ret.end(), kmers.begin(), kmers.end());
+
+            //for (i = 0; i + k < seq.length(); i++){
+            //    ret.push_back(seq.substr(i, i+k));
+            //    ret.push_back(reverse(reverse_complement(seq.substr(i, i+k))));
+            //}
+
+
+        }
+        return ret;
+    };
 
     /* Returns a deduplicated set of string kmers */
-    vector<string> kmer_set(vector<string> kmers);
+    inline vector<string> kmer_set(vector<string> kmers) {
+        set<string> uniqs = set<string> (kmers.begin(), kmers.end());
+        vector<string> ret = vector<string> (uniqs.begin(), uniqs.end());
+        return ret;
+    };
 
     /* Returns a heap (priority queue) of the kmers of a read converted to ints. */
 
     /* Returns a heap (priority queue) of the kmers of the read */
-    priority_queue<string> kmer_heap(string seq, vector<int> k);
+    inline priority_queue<string> kmer_heap(string seq, vector<int> kmer){
+
+        vector<string> base;
+
+        //priority_queue<string> ret(base.begin(), base.end());
+        for (auto k : kmer){
+            vector<string> outmers(seq.length() - k, "");
+            for (int i = 0; i < seq.length() - k; i++){
+                string forward = seq.substr(i, k);
+                string revrev = reverse(reverse_complement(forward));
+
+                //ret.push( (revrev < forward ? revrev : forward) );
+                outmers[i] = (revrev < forward ? revrev : forward);
+            }
+            base.reserve(outmers.size() + base.size());
+            base.insert(base.end(), outmers.begin(), outmers.end());
+        }
+
+        priority_queue<string> ret(base.begin(), base.end());
+        return ret;
+    };
 
     const static int first_bits[5] = {0,0,1,1,0};
     const static int second_bits[5] = {1,0,0,1,0};
     /* Converts a string kmer to an integer representation */
-    inline bool kmer_to_integer(char* kmer, int length, hash_t*& h){
+    inline bool kmer_to_integer(const char* kmer, const int& length, hash_t*& h){
         assert(length < 31);
         *h = 0;
         std::bitset<64> rb;
@@ -241,7 +409,7 @@ namespace mkmh{
         return true;
     }
 
-    inline bool kmer_to_integer(char* kmer, int length, hash_t& h){
+    inline bool kmer_to_integer(const char* kmer, const int& length, hash_t& h){
         assert(length < 31);
         h = 0;
         std::bitset<64> rb;
@@ -261,6 +429,27 @@ namespace mkmh{
         return true;
     }
 
+
+
+    /**
+     * Thanks to https://stackoverflow.com/questions/39242932/how-to-encode-char-in-2-bits
+     * NB: limited to kmers < k = 32
+     */ 
+    inline uint64_t kmer_to_integer(const char* kmer, const int& length){
+        uint64_t ret = 0;
+        uint64_t retrev = 0;
+
+        char* rev;
+        reverse_complement(kmer, rev, length);
+
+        for (int i = 0; i < length; ++i){
+            ret = (ret << 2) | ((kmer[i] >> 1) & 3);
+            retrev = (retrev << 2) | ((rev[i] >> 1) & 3);
+        }
+
+        return ret < retrev ? ret : retrev;
+    };
+
     /* Returns a deduplicated set of kmers or hashes as a vector<T> */
     template<typename T>
         inline vector<T> v_set(vector<T> kmers){
@@ -269,17 +458,64 @@ namespace mkmh{
             return ret;
         }
 
-    /* Returns the forward shingles size k of a sequence */
-    vector<string> shingle(string seq, int k);
+    /* Returns only the forward shingles size k of a sequence */
+    inline vector<string> shingle(string seq, int k){
+        int i = 0;
+        vector<string> ret;
+        for (i = 0; i < seq.length() - k; i++){
+            ret.push_back(seq.substr(i, k));
+        }
+        return ret;
+    }
 
     /** Returns an mkmh_minimizer struct, equivalent to a tuple(kmer, position, kmer length), for every position in the genome **/
-    vector<mkmh_minimizer> kmer_tuples(string seq, int k);
+    inline vector<mkmh_minimizer> kmer_tuples(string seq, int k){
+        vector<string> kmers = kmerize(seq, k);
+        vector<mkmh_minimizer> tups (kmers.size());
+        for (int i = 0; i < kmers.size(); i++){
+            mkmh_minimizer mm;
+            mm.seq = kmers[i];
+            mm.pos = i;
+            mm.length = k;
+            tups[i] = mm;
+        }
+
+        return tups;
+    }
 
     /** Finds the (w, k) minimizers of a string **/
-    vector<mkmh_minimizer> minimizers(string seq, int k, int w); 
+    inline vector<mkmh_minimizer> minimizers(string seq, int k, int w){
+        vector<mkmh_minimizer> ret;
+        vector<mkmh_minimizer> kmert = kmer_tuples(seq, k);
+        int i = 0;
+        for (i = 0; i + w < kmert.size(); ++i){
+            // get and sort kmers in window (i, i + w)
+            vector<mkmh_minimizer> window_kmers(kmert.begin() + i, kmert.begin() + i + w);
+            std::sort(window_kmers.begin(), window_kmers.end());
+            // TODO filter minimizers if needed, e.g. to remove poly-As
+            // create an mkmh_minimizer struct
+            // tuck minimizer in ret
+            ret.push_back(*(window_kmers.begin()));
+        }
+        return v_set(ret);
+    };
 
     /** Finds the (w,k) minimizers and reports all of them (including duplicates) **/
-    vector<mkmh_minimizer> unreduced_minimizers(string seq, int k, int w); 
+    inline vector<mkmh_minimizer> unreduced_minimizers(string seq, int k, int w){
+        vector<mkmh_minimizer> ret;
+        vector<mkmh_minimizer> kmert = kmer_tuples(seq, k);
+        int i = 0;
+        for (i = 0; i + w < kmert.size(); ++i){
+            // get and sort kmers in window (i, i + w)
+            vector<mkmh_minimizer> window_kmers(kmert.begin() + i, kmert.begin() + i + w);
+            std::sort(window_kmers.begin(), window_kmers.end());
+            // TODO filter minimizers if needed, e.g. to remove poly-As
+            // create an mkmh_minimizer struct
+            // tuck miimizer in ret
+            ret.push_back(*(window_kmers.begin()));
+        }
+        return ret;
+    };
 
     inline void top_64_bits(uint32_t*& hash_holder, hash_t& ret){
         ret = static_cast<uint64_t>(hash_holder[0]) << 32 | hash_holder[1];
@@ -294,9 +530,11 @@ namespace mkmh{
     //      forhash: a 128-bit int (e.g. uint32_t[4]) for holding forward hash.
     //      revhash: a 128-bit int (e.g. uint32_t[4]) for holding reverse hash.
     //      finhash: a 64-bit int (e.g. uint64_t) which holds the lesser of (forhash, revhash);
-    inline void calc_hash(const char* seq, const int& len,
+    inline void calc_hash(const char* seq,
+     const int& len,
             char*& reverse,
-            uint32_t*& forhash, uint32_t*& revhash,
+            uint32_t*& forhash,
+             uint32_t*& revhash,
             hash_t*& fin_hash){
 
 
@@ -561,11 +799,36 @@ namespace mkmh{
     };
 
     /** Calculate a MinHash sketch for kmers length (2 * k) with skip bases in between the two k-length halves **/
-    vector<hash_t> allhash_64_linkmer(string seq, int k, int skip = 0);
+    inline vector<hash_t> allhash_64_linkmer(string seq, int k, int skip){
+        vector<hash_t> ret(seq.size() - (k*2));
+        int last_kmer_ind = seq.size() - (skip + (2 * k) );
 
+        #pragma omp parallel for
+        for (int i = 0; i <= last_kmer_ind; ++i){
+            char * linkmer = new char [k * 2];
+            for (int j = 0; j < k; ++j){
+                linkmer[j] = seq[i + j];
+                linkmer[k + j] = seq[i + skip + k + j];
+            }
+            hash_t c_hash = calc_hash(linkmer, 2*k);
+            ret[i] = c_hash;
+            delete [] linkmer;
+        }
+        
+        return ret;
+    }
     /* Returns the forward shingles of all k sizes of a sequence */
     /* Shingles are just forward-only kmers */
-    vector<string> multi_shingle(string seq, vector<int> k);
+    inline vector<string> multi_shingle(string seq, vector<int> kSizes){
+        int i = 0;
+        vector<string> ret;
+        for (auto k : kSizes){
+            for (i = 0; i + k < seq.length(); i++){
+                ret.push_back(seq.substr(i, k));
+            }
+        }
+        return ret;
+    };
 
     /** Mask (by converting to zero) hashes that don't satisfy min_occ <= frequency(h) <= max_occ **/
     inline void mask_by_frequency(hash_t*& hashes, const int& num_hashes,
@@ -579,6 +842,25 @@ namespace mkmh{
             hashes[i] = (min_occ <= freq && freq <= max_occ) ? hashes[i] : 0;
         }
     };
+
+    inline vector<hash_t> minhashes(hash_t* hashes, int num_hashes, int sketch_size, bool useBottom){
+       vector<hash_t> x = vector<hash_t>(hashes, hashes + num_hashes); 
+       std::sort(x.begin(), x.end());
+
+       int valid_ind = 0;
+       while (x[valid_ind] == 0){
+            valid_ind++;
+       }
+
+       /*for (auto xx : x){
+           if (xx != 0){
+            cerr << xx << endl;
+           }
+       }*/
+
+       int hashmax = valid_ind + sketch_size < num_hashes ? valid_ind + sketch_size : num_hashes - 1;
+       return std::vector<hash_t>(x.begin() + valid_ind, x.begin() + hashmax);
+    }
 
     /** MinHash - given an array of hashes, modify the mins array to hold 
      * the lowest/highest N (excluding zeros) **/
@@ -655,27 +937,153 @@ namespace mkmh{
     vector<hash_t> minhashes(hash_t* hashes, int num_hashes, int sketch_size, bool useBottom=true);    
 
     /* Returns the lowest hashSize hashes of the kmers (length k...k` in k) of seq */
-    vector<hash_t> minhash_64(string& seq, vector<int>& k, int hashSize, bool useBottom=true);
+    inline vector<hash_t> minhash_64(string& seq, vector<int>& k, int hashSize, bool useBottom){
+        vector<hash_t> ret;
+        //ret.reserve(k.size() * seq.size());
+
+        for (auto km_sz : k){
+            vector<hash_t> tmp = calc_hashes(seq, km_sz);
+            ret.insert(ret.end(), tmp.begin(), tmp.end());
+        }
+        std::sort(ret.begin(), ret.end());
+        int nonzero_ind = 0;
+        while (ret[nonzero_ind] == 0){
+            nonzero_ind++;
+        }
+
+        hashSize += nonzero_ind;
+        int hashmax = hashSize < ret.size() ? hashSize : ret.size() - 1 ;
+
+
+
+        return useBottom ?
+            vector<hash_t> (ret.begin() + nonzero_ind, ret.begin() + hashmax) :
+            vector<hash_t> (ret.rbegin() + nonzero_ind, ret.rbegin() + hashmax);
+
+    };
 
     /* Returns the bottom/top hashSize hashes of kmers size k in seq */ 
-    vector<hash_t> minhash_64(string seq, int k, int hashSize, bool useBottom=true);
+    inline vector<hash_t> minhash_64(string seq, int k, int hashSize, bool useBottom){
+        vector<string> kmers = kmerize(seq, k);
+        vector<hash_t> ret(kmers.size(), 0);
 
+        for (int i = 0; i < kmers.size(); i++){
+
+            uint32_t seed = 42;
+            uint32_t khash[4];
+            uint32_t rev_rev_khash[4];
+            int str_length = kmers[i].size();
+            const char*
+                forward = kmers[i].c_str();
+            string rrf = reverse(reverse_complement(kmers[i]));
+            const char*
+                rev_rev_forward = rrf.c_str();
+
+            MurmurHash3_x64_128(forward, str_length, seed, khash);
+            MurmurHash3_x64_128(rev_rev_forward, str_length, seed, rev_rev_khash);
+
+            hash_t tmp_rev = *((hash_t *) rev_rev_khash);
+            hash_t tmp_for = *((hash_t *) khash);
+
+            ret[i] = tmp_for < tmp_rev ? tmp_for : tmp_rev;
+        }
+
+        std::sort(ret.begin(), ret.end());
+
+
+        if (useBottom){
+            return vector<hash_t> (ret.begin(), ret.begin() + hashSize);
+        }
+        else{
+            return vector<hash_t> (ret.rbegin(), ret.rbegin() + hashSize);
+        }
+    }
     /* helper function: returns the top hashSize hashes of the kmers size k in seq */
-    vector<hash_t> top_minhash_64(string seq, int k, int hashSize);
+    inline vector<hash_t> top_minhash_64(string seq, int k, int hashSize){
+        return minhash_64(seq, k, hashSize, false);
+    };
+
+
+
 
     /* helper function: returns the bottom hashSize hashes of the kmers size k in seq */
-    vector<hash_t> bottom_minhash_64(string seq, int k, int hashSize);
-
+    inline vector<hash_t> bottom_minhash_64(string seq, int k, int hashSize){
+        return minhash_64(seq, k, hashSize, true);
+    };
     /* Returns the bottom/top hashSize hashes of kmers size k which 
      * occur more than minDepth times, based on the depth in hash_to_depth */
-    vector<hash_t> minhash_64_depth_filter(string& seq, vector<int>& k,
+    inline     vector<hash_t> minhash_64_depth_filter(string& seq, vector<int>& k,
             int hashSize, bool useBottom, int minDepth,
-            unordered_map<hash_t, int>& hash_to_depth);
+            unordered_map<hash_t, int>& hash_to_depth){
 
+        vector<string> kmers = multi_kmerize(seq, k);
+
+        vector<hash_t> ret;
+        ret.reserve(kmers.size());
+
+        //#pragma omp parallel for
+        for (int i = 0; i < kmers.size(); i++){
+            uint32_t khash[4];
+            uint32_t rev_rev_khash[4];
+            int str_length = kmers[i].size();
+            const char* forward = kmers[i].c_str();
+
+            string rrf = reverse(reverse_complement(kmers[i]));
+            const char* rev_rev_forward = rrf.c_str();
+
+            MurmurHash3_x64_128(forward, str_length, 42, khash);
+            MurmurHash3_x64_128(rev_rev_forward, str_length, 42, rev_rev_khash);
+
+            hash_t tmp_for = hash_t(khash[2]) << 32 | hash_t(khash[1]);
+            hash_t tmp_rev = hash_t(rev_rev_khash[2]) << 32 | hash_t(rev_rev_khash[1]);
+
+            hash_t r_hash = tmp_for < tmp_rev ? tmp_for : tmp_rev; //ret.push_back(r_hash);
+            if (hash_to_depth[r_hash] > minDepth){
+#pragma omp critical
+                ret.push_back(r_hash);
+            }
+        }
+
+        if (ret.size() == 0){
+            return ret;
+        }
+        std::sort(ret.begin(), ret.end());
+
+        int hashmax = hashSize < ret.size() ? hashSize : ret.size() - 1 ;
+
+        return useBottom ?
+            vector<hash_t> (ret.begin(), ret.begin() + hashmax) :
+            vector<hash_t> (ret.rbegin(),ret.rbegin() + hashmax);
+    };
+    
     /* Takes in a list of pre-computed hashes and returns the MinHash (size hashSize)
      * of the hashes that pass the depth filter */
-    vector<hash_t> minhash_64_depth_filter(vector<hash_t>& hashes, int hashSize, bool useBottom,
-            int min_depth, unordered_map<hash_t, int>& hash_to_depth);
+
+    inline vector<hash_t> minhash_64_depth_filter(vector<hash_t>& hashes, int hashSize, bool useBottom,
+            int min_depth, unordered_map<hash_t, int>& hash_to_depth){
+        vector<hash_t> ret;
+        ret.reserve(hashes.size() / 2);
+        for (int i = 0; i < hashes.size(); i++){
+            if (hash_to_depth[hashes[i]] > min_depth){
+#pragma omp critical
+                ret.push_back(hashes[i]);
+            }
+        }
+
+        /**
+         * Special case if no hashes pass the depth filter.
+         */
+        if (ret.size() == 0){
+            return ret;
+        }
+
+        std::sort(ret.begin(), ret.end());
+
+        int hashmax = hashSize < ret.size() ? hashSize : ret.size() - 1 ;
+        return useBottom ?
+            vector<hash_t> (ret.begin(), ret.begin() + hashmax) :
+            vector<hash_t> (ret.rbegin(),ret.rbegin() + hashmax);
+    };
 
     vector<hash_t> minhash_64_fast(string seq, vector<int> kmer, int sketchSize, bool isBottom=true);
 
@@ -683,13 +1091,68 @@ namespace mkmh{
     vector<hash_t> hash_union(vector<hash_t> alpha, vector<hash_t> beta);
 
     /* Returns the intersection of alpha and beta, including duplicates */   
-    std::tuple<hash_t*, int> hash_intersection(hash_t* alpha, int alpha_start, int alpha_len,
-            hash_t* beta, int beta_start, int beta_len,
-            int sketch_size);
+    inline std::tuple<hash_t*, int> hash_intersection(hash_t alpha [ ], int alpha_start, int alpha_len,
+                                                            hash_t beta[ ], int beta_start, int beta_len,
+                                                            int sketch_size){
+        hash_t* ret = new hash_t[ sketch_size ];
+        int ret_len = 0;
 
+        int i = alpha_start;
+        int j = beta_start;
+        while(i < alpha_len && j < beta_len){
+            if (alpha[i] == beta[j]){
+                ret[ret_len] = alpha[i];
+                ++i;
+                ++j;
+                ++ret_len;
+            }
+            else if (alpha[i] > beta[j]){
+                ++j;
+            }
+            else{
+                ++i;
+            }
+
+        }
+        
+        //vector<hash_t> ret;
+        //set_intersection(alpha + alpha_start, alpha + alpha_len,
+        //                beta + beta_start, beta + beta_len,
+        //                ret.begin());
+
+
+        //return std::make_tuple(&(*ret.begin()), ret.size());
+        return std::make_tuple(ret, ret_len);
+    };
     /* Returns the intersection of alpha and beta, including duplicates the number of
        times they appear in both vectors */
-    vector<hash_t> hash_intersection(vector<hash_t> alpha, vector<hash_t> beta);
+    inline vector<hash_t> hash_intersection(vector<hash_t> alpha, vector<hash_t> beta){
+        vector<hash_t> ret;
+        ret.reserve(alpha.size());
+        int i = 0;
+        int j = 0;
+        while (alpha[i] == 0){
+            i++;
+        }
+        while(beta[j] == 0){
+            j++;
+        }
+        while (i < alpha.size() && j < beta.size()){
+            if (alpha[i] == beta[j]){
+                ret.push_back(alpha[i]);
+                i++;
+                j++;
+            }
+            else if (alpha[i] > beta[j]){
+                j++;
+            }
+            else{
+                i++;
+            }
+        }
+
+        return ret;
+    };
 
     /* Returns the union of the two sets after deduplicating all duplicates */
     vector<hash_t> hash_set_union(vector<hash_t> alpha, vector<hash_t> beta);
@@ -771,8 +1234,27 @@ namespace mkmh{
     priority_queue<string> kmer_heap_intersection(priority_queue<string> alpha, priority_queue<string> beta);
 
     /** Return the intersection of two lists of kmers **/
-    vector<string> kmer_intersection(vector<string> alpha, vector<string> beta);
+    inline vector<string> kmer_intersection(vector<string> alpha, vector<string> beta){
+        vector<string> ret;
+        ret.reserve(alpha.size());
+        int i = 0;
+        int j = 0;
+        while(i < alpha.size() && j < beta.size()){
+            if (alpha[i] == beta[j]){
+                ret.push_back(alpha[i]);
+                i++;
+                j++;
+            }
+            else if (alpha[i] > beta[j]){
+                j++;
+            }
+            else{
+                i++;
+            }
+        }
 
+        return ret;
+    };
 
     // Hold a buffer of bufsz kmers and pass that to the stringstream
     inline void print_kmers(char* seq, const int& len, int k, char* opt_char = NULL){
