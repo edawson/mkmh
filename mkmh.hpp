@@ -74,10 +74,19 @@ namespace mkmh{
         ~mkmh_hash_vec(){
             delete [] hashes;
         };
+        void resize(double factor = 1.2){
+            int newcap = int(factor * size);
+            hash_t* new_hashes = new hash_t[newcap];
+            capacity = newcap;
+            for (int i = 0; i < size; ++i){
+                new_hashes[i] = hashes[i];
+            }
+            delete [] hashes;
+            hashes = new_hashes;
+        };
         void emplace(const hash_t& h){
             if (this->size < this->capacity){
-                hashes[this->size - 1] = h;
-                ++(this->size);
+                hashes[this->size++] = h;
             }
         };
     };
@@ -1099,7 +1108,7 @@ namespace mkmh{
         const int& seqlen,
         const int& k,
         const int& w,
-        mkmh_hash_vec* hvec,
+        mkmh_hash_vec*& hvec,
         bool hashKmers = true
         ){
         hvec = new mkmh_hash_vec( ((seqlen - k) / w) + ((seqlen - k) % w == 0 ? 0 : 1) );
