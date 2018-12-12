@@ -11,20 +11,15 @@ endif
 LD_LIB_FLAGS:= -Lmurmur3 -L. -Lxxhash
 LD_INC_FLAGS:= -I. -Imurmur3 -IxxHash
 
-libmkmh.a: mkmh.o HASHTCounter.o murmur3/libmurmur3.a Makefile
-	ar -rs $@ $< HASHTCounter.o murmur3/libmurmur3.a
 
-example: example.cpp
-	$(CXX) $(CXXFLAGS) -o $@ $< $(LD_LIB_FLAGS) $(LD_INC_FLAGS) -lmkmh -lmurmur3
+example: example.cpp mkmh.hpp
+	$(CXX) $(CXXFLAGS) -o $@ $< $(LD_LIB_FLAGS) $(LD_INC_FLAGS) -lmurmur3
 
-test: mkmh_test.cpp libmkmh.a murmur3/libmurmur3.a
-	$(CXX) -o $@ $< $(LD_LIB_FLAGS) $(LD_INC_FLAGS) -lmkmh -lmurmur3 && ./test
+test: mkmh_test.cpp mkmh.hpp murmur3/libmurmur3.a
+	$(CXX) -o $@ $< $(LD_LIB_FLAGS) $(LD_INC_FLAGS) -lmurmur3 && ./test
 
-fast_test: test.cpp libmkmh.a murmur3/libmurmur3.a
-	$(CXX) $(CXXFLAGS) -o $@ $< $(LD_LIB_FLAGS) $(LD_INC_FLAGS) -lmkmh -lmurmur3
-
-mkmh.o: mkmh.cpp mkmh.hpp HASHTCounter.o murmur3/libmurmur3.a murmur3/murmur3.hpp
-	$(CXX) $(CXXFLAGS) -c $< $(LD_LIB_FLAGS) $(LD_INC_FLAGS) -lmurmur3
+fast_test: test.cpp mkmh.hpp murmur3/libmurmur3.a
+	$(CXX) $(CXXFLAGS) -o $@ $< $(LD_LIB_FLAGS) $(LD_INC_FLAGS) -lmurmur3
 
 HASHTCounter.o: HASHTCounter.cpp HASHTCounter.hpp
 	$(CXX) $(CXXFLAGS) -c $< $(LD_LIB_FLAGS) $(LD_INC_FLAGS)
@@ -44,7 +39,6 @@ clean:
 	cd xxHash && $(MAKE) clean
 
 clobber: clean
-	$(RM) libmkmh
 	$(RM) *.a
 	cd murmur3 && $(MAKE) clean
 	cd xxHash && $(MAKE) clean
