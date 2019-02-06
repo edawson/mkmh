@@ -90,6 +90,23 @@ namespace mkmh{
             }
             hashes[this->size++] = h;
         };
+        // Trim excess array space IFF the number of elements is 
+        // less than some percentage of capacity
+        void trim(double factor = 0.6){
+            if (this->size < int(this->capacity * factor)){
+                int newcap = size;
+                hash_t* new_hashes = new hash_t[newcap];
+                for (int i = 0; i < size; ++i){
+                    new_hashes[i] = hashes[i];
+                }
+                delete [] hashes;
+                hashes = new_hashes;
+                capacity = newcap;
+            }
+        };
+        void sort(){
+            std::sort(this->hashes, this->hashes + this->size);
+        };
     };
 
     // Crazy hack char table to test for canonical bases
