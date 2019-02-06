@@ -75,7 +75,7 @@ namespace mkmh{
             delete [] hashes;
         };
         void resize(double factor = 1.2){
-            int newcap = int(factor * size);
+            int newcap = int(factor * capacity);
             hash_t* new_hashes = new hash_t[newcap];
             capacity = newcap;
             for (int i = 0; i < size; ++i){
@@ -85,9 +85,10 @@ namespace mkmh{
             hashes = new_hashes;
         };
         void emplace(const hash_t& h){
-            if (this->size < this->capacity){
-                hashes[this->size++] = h;
+            if (this->size == this->capacity){
+                resize();
             }
+            hashes[this->size++] = h;
         };
     };
 
