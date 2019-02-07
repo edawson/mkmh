@@ -74,6 +74,12 @@ namespace mkmh{
         ~mkmh_hash_vec(){
             delete [] hashes;
         };
+        inline void set_capacity(int cap){
+           size = 0;
+           capacity = cap;
+           hashes = new hash_t[capacity];
+        };
+
         void resize(double factor = 1.2){
             int newcap = int(factor * capacity);
             hash_t* new_hashes = new hash_t[newcap];
@@ -84,11 +90,11 @@ namespace mkmh{
             delete [] hashes;
             hashes = new_hashes;
         };
-        void emplace(const hash_t& h){
+        void emplace( hash_t h){
             if (this->size == this->capacity){
                 resize();
             }
-            hashes[this->size++] = h;
+            this->hashes[this->size++] = h;
         };
         // Trim excess array space IFF the number of elements is 
         // less than some percentage of capacity
@@ -208,6 +214,13 @@ namespace mkmh{
         for (int i = 0; i < length; i++){
             char c = seq[i];
             seq[i] = ( (c - 91) > 0 ? c - 32 : c);
+        }
+    };
+
+    inline void to_upper(const char* seq, int length, char* ret){
+        for (int i = 0; i < length; i++){
+            char c = seq[i];
+            ret[i] = ( (c - 91) > 0 ? c - 32 : c);
         }
     };
 
