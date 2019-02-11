@@ -66,13 +66,28 @@ namespace mkmh{
         hash_t* hashes;
         uint32_t size;
         uint32_t capacity;
+        mkmh_hash_vec(){
+            size = 0;
+            capacity = 1000;
+            hashes = new hash_t[capacity];
+        };
         mkmh_hash_vec(uint32_t cap){
             size = 0;
             capacity = cap;
             hashes = new hash_t[capacity];
         };
+        mkmh_hash_vec(const mkmh_hash_vec& other){
+            size = other.size;
+            capacity = other.capacity;
+            hashes = new hash_t[capacity];
+            for (size_t i = 0; i < other.size; ++i){
+                hashes[i] = other.hashes[i];
+            }
+        };
         ~mkmh_hash_vec(){
-            delete [] hashes;
+            if (this->capacity > 0){
+                delete [] this->hashes;
+            }
         };
         inline void set_capacity(int cap){
            size = 0;
