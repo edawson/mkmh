@@ -65,7 +65,7 @@ namespace mkmh{
     struct mkmh_hash_vec {
         hash_t* hashes;
         uint32_t size;
-        uint32_t capacity;
+        uint64_t capacity;
         mkmh_hash_vec(){
             size = 0;
             capacity = 1000;
@@ -90,13 +90,16 @@ namespace mkmh{
             }
         };
         inline void set_capacity(int cap){
-           size = 0;
-           capacity = cap;
-           hashes = new hash_t[capacity];
+            if (this->capacity > 0){
+                delete [] hashes;
+            }
+            size = 0;
+            capacity = cap;
+            hashes = new hash_t[capacity];
         };
 
         void resize(double factor = 1.2){
-            int newcap = int(factor * capacity);
+            size_t newcap = int(factor * capacity);
             hash_t* new_hashes = new hash_t[newcap];
             capacity = newcap;
             for (int i = 0; i < size; ++i){
@@ -225,7 +228,7 @@ namespace mkmh{
 
     /* Capitalize all characters in a string */
     /* Capitalize a C string */
-    inline void to_upper(char* seq, int length){
+    inline void to_upper(char*& seq, size_t length){
         for (int i = 0; i < length; i++){
             char c = seq[i];
             seq[i] = ( (c - 91) > 0 ? c - 32 : c);
