@@ -21,7 +21,7 @@ test: mkmh_test.cpp mkmh.hpp murmur3/libmurmur3.a
 fast_test: test.cpp mkmh.hpp murmur3/libmurmur3.a
 	$(CXX) $(CXXFLAGS) -o $@ $< $(LD_LIB_FLAGS) $(LD_INC_FLAGS) -lmurmur3
 
-libmkmh.a: HASHTCounter.o mkmh.hpp
+libmkmh.a: HASHTCounter.o mkmh.hpp murmur3/libmurmur3.a
 	ar -rs $@ $^ 
 
 HASHTCounter.o: HASHTCounter.cpp HASHTCounter.hpp
