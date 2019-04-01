@@ -1152,8 +1152,16 @@ namespace mkmh{
     vector<hash_t> minhash_64_fast(string seq, vector<int> kmer, int sketchSize, bool isBottom=true);
 
 
+    // inline void modimizer(char*& seq,
+    //     const std::size_t& seqlen,
+    //     const std::uint16_t& k,
+    //     mkmh::mkmh_hash_vec*& ret,
+    //     bool hashKmers = true){
+    //     ret = new mkmh::mkmh_hash_vec(seqlen);
+    // }
+
     /** TODO: this definitely has an off by W bug or something **/
-    inline void minimizers(char* seq,
+    inline void minimizers(char*& seq,
         const int& seqlen,
         const int& k,
         const int& w,
