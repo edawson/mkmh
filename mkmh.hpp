@@ -656,6 +656,37 @@ namespace mkmh{
     };
 
 
+    inline void calc_hash_no_reverse(const char* seq, const size_t& len, hash_t*& hash, std::function<void(const char*, const std::size_t&, hash_t*&)> hashfunc){
+        if (pliib::canonical(seq, len)){
+            hashfunc(seq, len, hash);
+        }
+        else{
+            *hash = 0;
+        }
+    };
+
+    inline void calc_hash_reduced_alloc(const char* seq,
+            const size_t& len,
+            hash_t*& hash,
+            std::function<void(const char*, const std::size_t&, hash_t*&)> hashfunc,
+            char*& reverse,
+            hash_t*& forhash,
+            hash_t*& revhash){
+        
+        if (pliib::canonical(seq, len)){
+            pliib::reverse_complement(seq, reverse, len);
+            hashfunc(seq, len, forhash);
+            hashfunc(reverse, len, rechash);
+            *hash = (*forhash < *revhash ? *forhash : *revhash);
+        }
+        else{
+            *hash = 0;
+            *forhash = 0;
+            *revhash = 0;
+        }
+    };
+
+
 
     /* Calculate the 64-bit hash for a string defined by seq and the length of seq */
     inline hash_t calc_hash(const char* seq, int seqlen){
@@ -670,7 +701,7 @@ namespace mkmh{
         delete [] rhash;
         delete [] fin_hash;
         return ret;
-    }
+    };
 
     /* Calculate the hash for a string seq */
     inline hash_t calc_hash(string seq){
@@ -678,6 +709,8 @@ namespace mkmh{
         const char* x = seq.c_str();
         return calc_hash(x, k);
     };
+
+
 
 
 
