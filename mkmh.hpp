@@ -64,14 +64,14 @@ namespace mkmh{
 
     struct mkmh_hash_vec {
         hash_t* hashes;
-        uint32_t size;
-        uint64_t capacity;
+	std::uint64_t size;
+	std::uint64_t capacity;
         mkmh_hash_vec(){
             size = 0;
             capacity = 1000;
             hashes = new hash_t[capacity];
         };
-        mkmh_hash_vec(uint32_t cap){
+        mkmh_hash_vec(const size_t cap){
             size = 0;
             capacity = cap;
             hashes = new hash_t[capacity];
@@ -89,7 +89,7 @@ namespace mkmh{
                 delete [] this->hashes;
             }
         };
-        inline void set_capacity(int cap){
+        inline void set_capacity(const int cap){
             if (this->capacity > 0){
                 delete [] hashes;
             }
@@ -101,16 +101,19 @@ namespace mkmh{
         void resize(double factor = 1.2){
             size_t newcap = int(factor * capacity);
             hash_t* new_hashes = new hash_t[newcap];
-            capacity = newcap;
             for (int i = 0; i < size; ++i){
                 new_hashes[i] = hashes[i];
             }
-            delete [] hashes;
+	    if (hashes != NULL && capacity > 0){
+            	delete [] hashes;
+	    }
+            capacity = newcap;
             hashes = new_hashes;
         };
-        void emplace( hash_t h){
+        void emplace( const hash_t h){
             if (this->size == this->capacity){
-                resize();
+                cerr << "Resize called; previous capacity was " << this->capacity << endl; 
+		resize();
             }
             this->hashes[this->size++] = h;
         };
