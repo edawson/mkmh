@@ -68,10 +68,7 @@ TEST_CASE("Upper works for strings and chars"){
     char noncon[4] = "aBd";
     string d = "ABCDEFG";
 
-    SECTION("to_upper works for char*"){
-        to_upper(c, 9);
-        REQUIRE(strcmp(c, "ACTGTGCCC") == 0);
-    }
+    
 }
 
 TEST_CASE("v_set removes duplicates and returns a vector", "[v_set]"){
