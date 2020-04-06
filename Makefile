@@ -15,8 +15,11 @@ LD_INC_FLAGS:= -I. -Imurmur3 -IxxHash
 example: example.cpp mkmh.hpp murmur3/libmurmur3.a
 	$(CXX) $(CXXFLAGS) -o $@ $< $(LD_LIB_FLAGS) $(LD_INC_FLAGS) -lmurmur3
 
-test: mkmh_test.cpp mkmh.hpp murmur3/libmurmur3.a
-	$(CXX) -o $@ $< $(LD_LIB_FLAGS) $(LD_INC_FLAGS) -lmurmur3 && ./test
+test: test-exe
+	./test-exe
+
+test-exe: mkmh_test.cpp mkmh.hpp murmur3/libmurmur3.a
+	$(CXX) -o $@ $< $(LD_LIB_FLAGS) $(LD_INC_FLAGS) -lmurmur3
 
 fast_test: test.cpp mkmh.hpp murmur3/libmurmur3.a
 	$(CXX) $(CXXFLAGS) -o $@ $< $(LD_LIB_FLAGS) $(LD_INC_FLAGS) -lmurmur3
@@ -33,7 +36,7 @@ murmur3/libmurmur3.a:
 xxHash/libxxhash.a:
 	+cd xxHash && $(MAKE)
 
-.PHONY: clean clobber
+.PHONY: clean clobber test
 
 clean:
 	$(RM) *.o
