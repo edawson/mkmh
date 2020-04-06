@@ -1,6 +1,8 @@
 # mkmh
 Make kmers, minimizers, hashes, and MinHash sketches (with multiple k), and compare them. 
 
+![C/C++ CI](https://github.com/edawson/mkmh/workflows/C/C++%20CI/badge.svg)
+
 ## Usage
 To use mkmh functions in your code:  
 1. Include the header file in your code  
