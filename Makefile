@@ -18,7 +18,7 @@ example: example.cpp mkmh.hpp murmur3/libmurmur3.a
 test: test-exe
 	./test-exe
 
-test-exe: mkmh_test.cpp mkmh.hpp murmur3/libmurmur3.a
+test-exe: mkmh_test.cpp mkmh.hpp
 	$(CXX) -o $@ $< $(LD_LIB_FLAGS) $(LD_INC_FLAGS) -lmurmur3
 
 fast_test: test.cpp mkmh.hpp murmur3/libmurmur3.a
