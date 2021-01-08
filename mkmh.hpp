@@ -1011,7 +1011,7 @@ namespace mkmh{
         }
         std::sort(ret.begin(), ret.end());
         int nonzero_ind = 0;
-        while (ret[nonzero_ind] == 0){
+        while (nonzero_ind < ret.size() && ret[nonzero_ind] == 0){
             nonzero_ind++;
         }
 
@@ -1223,10 +1223,10 @@ namespace mkmh{
         ret.reserve(alpha.size());
         int i = 0;
         int j = 0;
-        while (alpha[i] == 0){
+        while (i < alpha.size() && alpha[i] == 0){
             i++;
         }
-        while(beta[j] == 0){
+        while(j < beta.size() && beta[j] == 0){
             j++;
         }
         while (i < alpha.size() && j < beta.size()){
